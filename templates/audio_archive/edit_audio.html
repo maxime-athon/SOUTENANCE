@@ -1,0 +1,310 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Modifier un audio | Radio Kara Archive{% endblock %}
+
+{% block content %}
+<style>
+    /* Styles pour corriger l'affichage des boutons d'onglets */
+    .tab-btn-custom {
+        border-radius: 8px !important;
+        font-weight: 500;
+        padding: 8px 16px;
+        transition: all 0.2s ease-in-out;
+    }
+    .tab-btn-custom.active {
+        background-color: #225A40 !important;
+        color: #ffffff !important;
+        border-color: #225A40 !important;
+    }
+    .tab-btn-custom:not(.active) {
+        background-color: transparent !important;
+        color: #225A40 !important;
+        border: 1px solid #225A40 !important;
+    }
+    .tab-btn-custom:hover:not(.active) {
+        background-color: rgba(34, 90, 64, 0.1) !important;
+    }
+</style>
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div>
+        <h1 class="fw-bold mb-1" style="color: #225A40;">Modifier une archive sonore</h1>
+        <p class="text-secondary mb-0">Mettez à jour les métadonnées ou remplacez l'enregistrement audio.</p>
+    </div>
+    <a href="{% url 'audio_management' %}" class="btn text-white rounded-3 d-inline-flex align-items-center gap-2" style="background-color: #D21E34;">
+        <i class="bi bi-arrow-left-circle-fill"></i> Retour
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-12 col-xl-8">
+        <div class="card border-0 bg-body shadow-sm rounded-4 p-4 p-lg-5">
+            <div class="d-flex align-items-center gap-2 mb-4">
+                <div class="rounded-circle p-2 text-white" style="background-color: #225A40;"><i class="bi bi-pencil-square"></i></div>
+                <div>
+                    <h4 class="fw-bold mb-0">Édition de l'archive</h4>
+                    <small class="text-muted">Modifiez les informations ci-dessous</small>
+                </div>
+            </div>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-info rounded-3 shadow-sm">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+
+            {% if form.errors %}
+                <div class="alert alert-danger rounded-3 shadow-sm mb-4">
+                    <strong class="d-block mb-1"><i class="bi bi-exclamation-triangle-fill me-2"></i>Veuillez corriger les erreurs suivantes :</strong>
+                    <ul class="mb-0 ps-3 small">
+                        {% for field, errors in form.errors.items %}
+                            {% for error in errors %}
+                                <li><strong>{{ field|capfirst }}</strong> : {{ error }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            <form method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+                <div class="row g-4">
+                    <div class="col-12 col-md-6">
+                        <label for="{{ form.title.id_for_label }}" class="form-label fw-semibold">Titre *</label>
+                        {{ form.title }}
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label for="{{ form.subtitle.id_for_label }}" class="form-label fw-semibold">Sous-titre</label>
+                        {{ form.subtitle }}
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label for="{{ form.category.id_for_label }}" class="form-label fw-semibold">Catégorie *</label>
+                        {{ form.category }}
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label for="{{ form.language.id_for_label }}" class="form-label fw-semibold">Langue</label>
+                        {{ form.language }}
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label for="{{ form.band_number.id_for_label }}" class="form-label fw-semibold">N° de bande</label>
+                        {{ form.band_number }}
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label for="{{ form.recording_number.id_for_label }}" class="form-label fw-semibold">N° d’enregistrement</label>
+                        {{ form.recording_number }}
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label for="{{ form.producer.id_for_label }}" class="form-label fw-semibold">Producteur / Présentateur</label>
+                        {{ form.producer }}
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label for="{{ form.speed.id_for_label }}" class="form-label fw-semibold">Vitesse / Format</label>
+                        {{ form.speed }}
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label for="{{ form.recording_date.id_for_label }}" class="form-label fw-semibold">Date enregistrement</label>
+                        {{ form.recording_date }}
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label for="{{ form.broadcast_date.id_for_label }}" class="form-label fw-semibold">Date diffusion</label>
+                        {{ form.broadcast_date }}
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label for="{{ form.duration.id_for_label }}" class="form-label fw-semibold">Durée</label>
+                        {{ form.duration }}
+                        <div class="small text-muted mt-1">Format attendu : HH:MM:SS</div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label for="{{ form.is_featured.id_for_label }}" class="form-label fw-semibold d-block">Mise en avant</label>
+                        <div class="form-check form-switch mt-2">
+                            {{ form.is_featured }}
+                            <label class="form-check-label ms-2" for="{{ form.is_featured.id_for_label }}">Afficher en vedette</label>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <label for="{{ form.description.id_for_label }}" class="form-label fw-semibold">Description / Transcription</label>
+                        {{ form.description }}
+                    </div>
+
+                    <!-- Zone duale des boutons d'onglets -->
+                    <div class="col-12">
+                        <label class="form-label fw-semibold mb-3">Remplacer le fichier audio (Optionnel)</label>
+                        
+                        <ul class="nav nav-pills gap-2 mb-3" id="audioSourceTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active tab-btn-custom" id="file-tab" data-bs-toggle="pill" data-bs-target="#filePanel" type="button" role="tab">
+                                    <i class="bi bi-upload me-1"></i> Téléverser un fichier
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                               <a href="{% url 'add_audio' %}?edit_id={{ audio.id }}&autostart=mic" class="nav-link tab-btn-custom text-decoration-none">
+    <i class="bi bi-mic-fill me-1"></i> Enregistrer via micro
+</a>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content" id="audioSourceTabContent">
+                            <!-- Option A : Fichier existant / Drag&Drop -->
+                            <div class="tab-pane fade show active" id="filePanel" role="tabpanel">
+                                <div class="border border-2 border-dashed rounded-4 p-4 text-center" id="dropZone" style="border-color: #225A40; background-color: rgba(34, 90, 64, 0.04);">
+                                    <i class="bi bi-cloud-arrow-up-fill d-block fs-1 mb-2" style="color: #225A40;"></i>
+                                    <div class="fw-semibold mb-2">Sélectionnez ou glissez un nouveau fichier audio</div>
+                                    <div class="small text-muted mb-3">Formats supportés : MP3, WAV, OGG, FLAC, M4A, WEBM</div>
+                                    <div>{{ form.file }}</div>
+                                    {% if form.file.errors %}
+                                        <div class="text-danger small mt-2">
+                                            {% for error in form.file.errors %}
+                                                <div><i class="bi bi-exclamation-circle me-1"></i>{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <div class="mt-3 small fw-bold text-muted" id="fileHint">Fichier physique d'origine conservé si aucun nouveau fichier n'est choisi.</div>
+                                </div>
+                            </div>
+
+                            <!-- Option B : Enregistreur Vocal Micro -->
+                            <div class="tab-pane fade" id="micPanel" role="tabpanel">
+                                <div class="border rounded-4 p-4 text-center bg-light">
+                                    <div class="mb-3">
+                                        <span id="recordTimer" class="fs-3 fw-bold font-monospace" style="color: #D21E34;">00:00</span>
+                                    </div>
+                                    <div class="d-flex justify-content-center gap-2 mb-3">
+                                        <button type="button" id="startRecBtn" class="btn text-white rounded-circle p-3" style="background-color: #D21E34;"><i class="bi bi-mic-fill fs-4"></i></button>
+                                        <button type="button" id="stopRecBtn" class="btn btn-secondary rounded-circle p-3" disabled><i class="bi bi-stop-fill fs-4"></i></button>
+                                    </div>
+                                    <small id="recStatus" class="d-block text-muted">Cliquez sur le micro rouge pour démarrer la prise de son.</small>
+                                    <audio id="recPreview" controls class="w-100 mt-3 d-none"></audio>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-column flex-md-row gap-2 justify-content-end mt-4">
+                    <a href="{% url 'audio_management' %}" class="btn btn-outline-secondary rounded-3">Annuler</a>
+                    <button type="submit" class="btn text-white rounded-3 px-4" style="background-color: #225A40;">Enregistrer les modifications</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Panneau latéral d'aperçu -->
+    <div class="col-12 col-xl-4">
+        <div class="card border-0 bg-body shadow-sm rounded-4 p-4 h-100">
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <div class="rounded-circle p-2 text-dark" style="background-color: #F6C400;"><i class="bi bi-volume-up-fill"></i></div>
+                <h5 class="fw-bold mb-0">Écoute Actuelle</h5>
+            </div>
+            <div class="border rounded-4 p-3 bg-light mb-3">
+                <div class="small text-uppercase text-secondary">Titre en base</div>
+                <div class="fw-semibold mt-1">{{ audio.title }}</div>
+                <div class="small text-muted">{{ audio.producer|default:"Producteur inconnu" }}</div>
+            </div>
+            {% if audio_url %}
+                <div class="p-3 border rounded-4 text-center bg-light">
+                    <audio class="w-100" controls preload="metadata" src="{{ audio_url }}">
+                        Votre navigateur ne supporte pas cet élément audio.
+                    </audio>
+                </div>
+            {% else %}
+                <div class="alert alert-warning small rounded-3 mb-0">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i> Aucun fichier sonore associé.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+const fileInput = document.getElementById('id_file');
+const dropZone = document.getElementById('dropZone');
+const fileHint = document.getElementById('fileHint');
+
+// Ajout automatique du filtrage HTML5 sur l'élément input file
+if (fileInput) {
+    fileInput.setAttribute('accept', '.mp3,.wav,.ogg,.flac,.m4a,.webm,audio/*');
+}
+
+if (dropZone && fileInput) {
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eName => {
+        dropZone.addEventListener(eName, (e) => e.preventDefault());
+        document.body.addEventListener(eName, (e) => e.preventDefault());
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            fileHint.textContent = `Nouveau fichier prêt : ${files[0].name}`;
+        }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        fileHint.textContent = file ? `Nouveau fichier prêt : ${file.name}` : 'Fichier physique d\'origine conservé si aucun nouveau fichier n\'est choisi.';
+    });
+}
+
+let mediaRecorder;
+let audioChunks = [];
+let timerInterval;
+let secondsElapsed = 0;
+
+const startRecBtn = document.getElementById('startRecBtn');
+const stopRecBtn = document.getElementById('stopRecBtn');
+const recordTimer = document.getElementById('recordTimer');
+const recStatus = document.getElementById('recStatus');
+const recPreview = document.getElementById('recPreview');
+
+if (navigator.mediaDevices && startRecBtn) {
+    startRecBtn.addEventListener('click', async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
+
+            mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+            
+            mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                const recordedFile = new File([audioBlob], `recording_${Date.now()}.webm`, { type: 'audio/webm' });
+
+                const container = new DataTransfer();
+                container.items.add(recordedFile);
+                fileInput.files = container.files;
+
+                recPreview.src = URL.createObjectURL(audioBlob);
+                recPreview.classList.remove('d-none');
+                fileHint.textContent = `Enregistrement vocal prêt : ${recordedFile.name}`;
+                recStatus.textContent = "Enregistrement terminé et attaché au formulaire.";
+            };
+
+            mediaRecorder.start();
+            startRecBtn.disabled = true;
+            stopRecBtn.disabled = false;
+            recStatus.textContent = "Enregistrement en cours...";
+
+            secondsElapsed = 0;
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                const mins = String(Math.floor(secondsElapsed / 60)).padStart(2, '0');
+                const secs = String(secondsElapsed % 60).padStart(2, '0');
+                recordTimer.textContent = `${mins}:${secs}`;
+            }, 1000);
+
+        } catch (err) {
+            recStatus.textContent = "Erreur d'accès au microphone : " + err.message;
+        }
+    });
+
+    stopRecBtn.disabled = true;
+    stopRecBtn.addEventListener('click', () => {
+        mediaRecorder.stop();
+        mediaRecorder.stream.getTracks().forEach(track => track.stop());
+        clearInterval(timerInterval);
+        startRecBtn.disabled = false;
+        stopRecBtn.disabled = true;
+    });
+}
+</script>
+{% endblock %}

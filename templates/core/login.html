@@ -1,0 +1,354 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion | SI-Archives Radio Kara</title>
+
+    <!-- Bootstrap 5 CSS & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
+    <!-- Script Theme JS (Anti-FOUC) -->
+    <script src="{% static 'js/theme.js' %}"></script>
+
+    <style>
+        :root {
+            /* Palette Officielle Institutionnelle */
+            --brand-green: #225A40;
+            --brand-green-hover: #18422e;
+            --brand-red: #D21E34;
+            --brand-yellow: #F6C400;
+
+            /* Variables Mode Clair */
+            --bg-left-panel: #f2f6f4;
+            --card-border-color: #dbe4df;
+            --form-card-bg: #ffffff;
+            --input-border: #ced6d1;
+            --shadow-color: rgba(34, 90, 64, 0.12);
+        }
+
+        [data-bs-theme="dark"] {
+            /* Variables Mode Sombre */
+            --bg-left-panel: #111a15;
+            --card-border-color: #213329;
+            --form-card-bg: #18241d;
+            --input-border: #2c3e33;
+            --shadow-color: rgba(0, 0, 0, 0.5);
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bs-body-bg);
+            transition: background-color 0.3s ease;
+            margin: 0;
+            padding: 1.5rem 0;
+        }
+
+        /* Animation d'entrée */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Conteneur principal équilibré */
+        .login-wrapper {
+            width: 100%;
+            max-width: 980px;
+            min-height: 580px;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px var(--shadow-color);
+            border: 1px solid var(--card-border-color) !important;
+            animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Panneau Gauche (Rembourrage identique au panneau droit) */
+        .left-panel {
+            background-color: var(--bg-left-panel);
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            border-right: 1px solid var(--card-border-color);
+        }
+
+        .left-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: none;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--brand-green) 0%, var(--brand-yellow) 50%, var(--brand-red) 100%);
+        }
+
+        /* Panneau Droit (Strictement équilibré et centré) */
+        .right-panel {
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .right-panel-content {
+            width: 100%;
+            max-width: 380px; /* Taille optimale pour éviter les espaces morts */
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        /* Cadre du Formulaire parfaitement centré */
+        .form-card {
+            background-color: var(--form-card-bg);
+            border: 1px solid var(--card-border-color);
+            border-top: 4px solid var(--brand-green);
+            border-radius: 18px;
+            padding: 2rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.04);
+            text-align: start;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+            width: 100%;
+        }
+
+        .form-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 28px var(--shadow-color);
+            border-color: var(--brand-green);
+        }
+
+        /* Couleurs de marque */
+        .text-brand-green { color: var(--brand-green) !important; }
+        .text-brand-red { color: var(--brand-red) !important; }
+        .text-brand-yellow { color: var(--brand-yellow) !important; }
+
+        .badge-official {
+            background-color: rgba(246, 196, 0, 0.18);
+            color: #8a6d00;
+            border: 1px solid rgba(246, 196, 0, 0.5);
+            font-weight: 600;
+            font-size: 0.78rem;
+        }
+        [data-bs-theme="dark"] .badge-official {
+            color: var(--brand-yellow);
+        }
+
+        /* Styles des Inputs */
+        .form-control {
+            border-color: var(--input-border);
+            font-size: 0.92rem;
+        }
+        .form-control:focus {
+            border-color: var(--brand-green);
+            box-shadow: 0 0 0 0.25rem rgba(34, 90, 64, 0.18);
+        }
+
+        .input-group:focus-within .input-group-text {
+            border-color: var(--brand-green);
+            color: var(--brand-green) !important;
+            background-color: rgba(34, 90, 64, 0.05) !important;
+        }
+
+        /* Bouton de connexion */
+        .btn-custom-primary {
+            background-color: var(--brand-green);
+            border-color: var(--brand-green);
+            color: #ffffff;
+            font-weight: 600;
+            padding: 0.65rem 1.25rem;
+            transition: all 0.2s ease;
+        }
+        .btn-custom-primary:hover {
+            background-color: var(--brand-green-hover);
+            border-color: var(--brand-green-hover);
+            color: #ffffff;
+            box-shadow: 0 6px 16px rgba(34, 90, 64, 0.25);
+        }
+
+        .alert-brand-danger {
+            background-color: rgba(210, 30, 52, 0.08);
+            border: 1px solid rgba(210, 30, 52, 0.25);
+            color: var(--brand-red);
+        }
+
+        /* Bouton Dark Mode */
+        .theme-toggle-btn {
+            position: absolute;
+            top: 1.25rem;
+            right: 1.25rem;
+            border-radius: 12px;
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--card-border-color);
+            background-color: var(--form-card-bg);
+            color: var(--bs-body-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        .theme-toggle-btn:hover {
+            border-color: var(--brand-yellow);
+            color: var(--brand-green);
+        }
+
+        .brand-logo {
+            max-height: 55px;
+            width: auto;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container p-3 d-flex justify-content-center">
+    <div class="row g-0 login-wrapper bg-body align-items-stretch">
+        
+        <!-- PANNEAU GAUCHE -->
+        <div class="col-lg-6 left-panel d-none d-lg-flex">
+            <div>
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <img src="{% static 'images/logo_radio_kara.png' %}" alt="Radio Kara" class="brand-logo" onerror="this.src='https://via.placeholder.com/150x60/225A40/FFFFFF?text=Radio+Kara'">
+                    <div>
+                        <h5 class="fw-bold mb-0">Radio Kara</h5>
+                        <small class="text-muted">La Fidèle</small>
+                    </div>
+                </div>
+
+                {% comment %} <div class="mb-3">
+                    <span class="badge badge-official rounded-pill px-3 py-2">
+                        <i class="bi bi-award-fill me-1 text-brand-yellow"></i> Portail Officiel d'Archivage
+                    </span>
+                </div> {% endcomment %}
+
+                <h3 class="fw-bold text-brand-green mb-3">Système Intégré d'Archivage</h3>
+                <p class="text-secondary small leading-relaxed">
+                    Plateforme unifiée de conservation, valorisation et numérisation des fonds audiovisuels et documentaires historiques.
+                </p>
+            </div>
+
+            <!-- Cartes d'illustration -->
+            <div class="my-auto">
+                <div class="p-3 rounded-4 bg-body border text-center">
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <div class="p-2.5 rounded-3 bg-body-tertiary border-start border-3" style="border-color: var(--brand-green) !important;">
+                                <i class="bi bi-mic-fill fs-4 text-brand-green d-block mb-1"></i>
+                                <span class="fw-semibold small d-block">Archives Sonores</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-2.5 rounded-3 bg-body-tertiary border-start border-3" style="border-color: var(--brand-yellow) !important;">
+                                <i class="bi bi-file-earmark-text-fill fs-4 text-brand-yellow d-block mb-1"></i>
+                                <span class="fw-semibold small d-block">Documents</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% comment %} <div class="d-flex justify-content-between align-items-center pt-2">
+                <small class="text-muted"><i class="bi bi-shield-check text-brand-green me-1"></i> Accès Réservé & Sécurisé</small>
+                <small class="text-muted fw-bold" style="font-size: 0.75rem;">v1.0.0</small>
+            </div> {% endcomment %}
+        </div>
+
+        <!-- PANNEAU DROIT (PARFAITEMENT CENTRÉ & ÉQUILIBRÉ) -->
+        <div class="col-lg-6 right-panel bg-body">
+            
+            <!-- Bouton Thème -->
+            <button class="theme-toggle-btn" onclick="toggleTheme()" title="Changer le thème">
+                <i id="theme-icon" class="bi bi-moon-stars-fill"></i>
+            </button>
+
+            <!-- BLOC DE CONTENU CENTRÉ -->
+            <div class="right-panel-content">
+
+                <!-- Entête mobile -->
+                <div class="d-lg-none mb-3 text-center">
+                    <img src="{% static 'images/logo_radio_kara.png' %}" alt="Radio Kara" class="brand-logo mb-2" onerror="this.src='https://via.placeholder.com/150x60/225A40/FFFFFF?text=Radio+Kara'">
+                    <h4 class="fw-bold mb-0">Radio Kara</h4>
+                    <small class="text-muted">Système Intégré d'Archivage</small>
+                </div>
+
+                <!-- En-tête Connexion -->
+                <div class="mb-4 text-center">
+                    <h3 class="fw-bold mb-1">Connexion</h3>
+                    <p class="text-secondary small mb-0">Entrez vos identifiants pour accéder à votre espace</p>
+                </div>
+
+                <!-- Messages Django -->
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-brand-danger alert-dismissible fade show rounded-3 small text-start py-2 px-3 mb-3" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill text-brand-red me-1"></i> {{ message }}
+                            <button type="button" class="btn-close py-2" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <!-- FORMULAIRE ENCADRÉ CENTRÉ -->
+                <div class="form-card">
+                    <form method="POST" action="{% url 'login' %}">
+                        {% csrf_token %}
+                        
+                        <!-- Nom d'utilisateur -->
+                        <div class="mb-3">
+                            <label for="username" class="form-label fw-semibold small">Nom d'utilisateur</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-body-tertiary"><i class="bi bi-person text-muted"></i></span>
+                                <input type="text" name="username" id="username" class="form-control py-2" placeholder="Ex: amedee" required autofocus>
+                            </div>
+                        </div>
+
+                        <!-- Mot de passe -->
+                        <div class="mb-4">
+                            <label for="password" class="form-label fw-semibold small">Mot de passe</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-body-tertiary"><i class="bi bi-lock text-muted"></i></span>
+                                <input type="password" name="password" id="password" class="form-control py-2" placeholder="••••••••" required>
+                            </div>
+                        </div>
+
+                        <!-- Bouton Se Connecter -->
+                        <button type="submit" class="btn btn-custom-primary w-100 rounded-3 shadow-sm d-flex align-items-center justify-content-center gap-2">
+                            <i class="bi bi-box-arrow-in-right"></i>
+                            <span>Se Connecter</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Pied de page -->
+                <div class="mt-4 text-center">
+                    <small class="text-muted" style="font-size: 0.78rem;">
+                        &copy; 2026 Radio Kara. Tous droits réservés.
+                    </small>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<!-- Bootstrap 5 JS Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

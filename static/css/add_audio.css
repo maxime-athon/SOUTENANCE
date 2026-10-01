@@ -1,0 +1,540 @@
+
+    .page-header {
+        background: linear-gradient(135deg, var(--primary-color) 0%, #1a4532 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 20px;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(34, 90, 64, 0.2);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .page-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+        animation: pulse 4s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.05);
+        }
+    }
+
+    .form-container {
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 3rem;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .form-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--primary-color) 0%, #1a4532 100%);
+    }
+
+    .form-title {
+        text-align: center;
+        margin-bottom: 2rem;
+        color: var(--text-main);
+    }
+
+    .form-title i {
+        font-size: 3rem;
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+    }
+
+    .form-label {
+        color: var(--text-main);
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: block;
+        font-size: 0.95rem;
+    }
+
+    .file-upload-area {
+        border: 2px dashed var(--primary-color);
+        border-radius: 15px;
+        padding: 3rem 2rem;
+        text-align: center;
+        background: rgba(34, 90, 64, 0.05);
+        transition: all 0.3s ease;
+        margin-bottom: 2rem;
+    }
+
+    .file-upload-area:hover {
+        background: rgba(34, 90, 64, 0.1);
+        border-color: #1a4532;
+    }
+
+    .file-upload-area.dragover {
+        border-style: solid;
+        background: rgba(34, 90, 64, 0.08);
+    }
+
+    .file-upload-area i {
+        font-size: 4rem;
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+    }
+
+    .file-info {
+        background: rgba(34, 90, 64, 0.1);
+        border: 1px solid rgba(34, 90, 64, 0.3);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-top: 1rem;
+        display: none;
+    }
+
+    .file-info.show {
+        display: block;
+    }
+
+    .btn-custom {
+        border-radius: 25px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        border: none;
+    }
+
+    .btn-primary-custom {
+        background: linear-gradient(135deg, var(--primary-color) 0%, #1a4532 100%);
+        color: white;
+    }
+            
+
+        .audio-btn i {
+            margin: 0 !important;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .edit-operations .btn {
+            padding: 0.5rem;
+            min-width: 40px;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .edit-operations .btn i {
+            margin: 0;
+        }
+
+        .edit-operations .btn:hover {
+            transform: scale(1.1);
+            transition: all 0.2s ease;
+        }
+
+        .edit-operations .btn-outline-primary:hover {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .edit-operations .btn-outline-warning:hover {
+            background-color: #ffc107;
+            border-color: #ffc107;
+            color: black;
+        }
+
+        .edit-operations .btn-outline-danger:hover {
+            background-color: #dc3545;
+            border-color: #dc3545;
+            color: white;
+        }
+
+        .edit-operations .btn-outline-info:hover {
+            background-color: #17a2b8;
+            border-color: #17a2b8;
+            color: white;
+        }
+
+        .edit-operations .btn-outline-secondary:hover {
+            background-color: #6c757d;
+            border-color: #6c757d;
+            color: white;
+        }
+
+        .edit-operations .btn-outline-success:hover {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .edit-operations .btn:disabled {
+            opacity: 0.5;
+        }
+
+        /* Uniform size for all buttons with only icons */
+        .btn-sm:not(:has(~ *)):not(:has(i + *)) {
+            width: 48px;
+            height: 48px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+        }
+
+        /* Updated Audio Button Styles */
+        .audio-tool-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
+            justify-items: center;
+            align-items: center;
+            margin-bottom: 1rem;
+            gap: 0;
+            width: 100%;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+            grid-auto-rows: 1fr;
+        }
+        
+        .audio-tool-row > div {
+            display: contents;
+        }
+        
+        .audio-tool-row .audio-btn-group {
+            display: contents;
+        }
+
+        .audio-btn {
+            background-color: var(--bg-card) !important;
+            border: 2px solid var(--border-color) !important;
+            color: var(--text-muted) !important;
+            width: 42px !important;
+            height: 42px !important;
+            border-radius: 8px !important;
+            margin: 0 3px !important;
+            transition: all 0.2s ease !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05) !important;
+        }
+
+        .audio-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+            border-color: var(--primary-color) !important;
+            color: var(--primary-color) !important;
+        }
+
+        .audio-btn:active {
+            transform: translateY(0);
+        }
+
+        .audio-btn i {
+            font-size: 1.1rem;
+        }
+
+        /* Record Button Special Style */
+        #recordBtn {
+            background-color: var(--secondary-color) !important;
+            border-color: var(--secondary-color) !important;
+            color: white !important;
+        }
+
+        #recordBtn:hover {
+            background-color: #b01829 !important;
+            border-color: #b01829 !important;
+        }
+
+        .audio-btn-group {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Edit operations centering */
+        .edit-operations {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            width: 100% !important;
+        }
+
+        /* Hide Audio Properties and Volume Control */
+        .audio-properties,
+        .volume-control {
+            display: none !important;
+        }
+
+        /* Hide Audio Preview */
+        .audio-preview {
+            display: none !important;
+        }
+
+        /* Hide Recording Area */
+        .audio-recording-area {
+            display: none !important;
+        }
+
+
+
+        /* Recording Timer Styling */
+        #recordingTimer {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #b01829 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(210, 30, 52, 0.4);
+            animation: pulse-timer 1s infinite;
+            letter-spacing: 3px;
+            font-family: 'Courier New', monospace;
+        }
+
+        #recordingTimer i {
+            font-size: 1.5rem;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes pulse-timer {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 8px 30px rgba(210, 30, 52, 0.4);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 12px 40px rgba(210, 30, 52, 0.6);
+            }
+        }
+
+        /* Recording Time Dot Animation */
+        @keyframes pulse-dot {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        /* Microphone Selection Styling */
+        #microphoneSelect {
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            padding: 0.75rem;
+            font-size: 1rem;
+            color: var(--text-main);
+            background-color: var(--bg-card);
+            transition: all 0.3s ease;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        #microphoneSelect:hover {
+            border-color: #1a4532;
+            box-shadow: 0 0 8px rgba(34, 90, 64, 0.3);
+        }
+
+        #microphoneSelect:focus {
+            outline: none;
+            border-color: #1a4532;
+            box-shadow: 0 0 12px rgba(34, 90, 64, 0.5);
+        }
+
+        /* Vue Meter Styles - Premium hardware look */
+        .vu-meter-wrapper {
+            background: #fff;
+            padding: 4px; /* Extreme slim padding */
+            border-radius: 6px;
+            display: flex;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255,255,255,0.1);
+            border: 1px solid #1a1a1a;
+            margin-bottom: 0.8rem;
+        }
+
+        .vu-meter-container {
+            background: #fff;
+            padding: 4px 8px; /* Extra compact */
+            border-radius: 4px;
+            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.8);
+            width: 100%;
+            max-width: 420px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px; /* Minimal gap */
+            align-items: stretch;
+        }
+
+        .vu-header {
+            font-size: 9px; /* Very small but readable */
+            font-weight: 700;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 2px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .vu-display {
+            display: flex;
+            flex-direction: column;
+            gap: 4px; /* Tight channels */
+            width: 100%;
+            position: relative;
+        }
+
+        .vu-channel-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .vu-channel-label {
+            color: #777;
+            font-family: monospace;
+            font-size: 9px;
+            font-weight: bold;
+            width: 10px;
+        }
+
+        .vu-bar {
+            flex: 1;
+            height: 5px; /* Extremely slim line */
+            display: flex;
+            gap: 0.8px;
+            background: #0d0d0d;
+            padding: 1px;
+            border-radius: 1px;
+            box-shadow: inset 0 1px 1px rgba(0,0,0,0.6);
+        }
+
+        .vu-segment {
+            flex: 1;
+            height: 100%;
+            background-color: #222; /* inactive */
+            border-radius: 1px;
+            transition: background-color 80ms ease;
+            opacity: 0.2;
+        }
+
+        /* LED Colors with Glow */
+        .vu-segment.green.active {
+            background-color: #00ff41;
+            box-shadow: 0 0 6px rgba(0, 255, 65, 0.6);
+            opacity: 1;
+        }
+
+        .vu-segment.yellow.active {
+            background-color: #ffcc00;
+            box-shadow: 0 0 8px rgba(255, 204, 0, 0.7);
+            opacity: 1;
+        }
+
+        .vu-segment.red.active {
+            background-color: #ff3333;
+            box-shadow: 0 0 10px rgba(255, 51, 51, 0.8);
+            opacity: 1;
+        }
+
+        /* Peak indicator */
+        .vu-segment.peak {
+            background-color: #ffffff !important;
+            box-shadow: 0 0 12px rgba(255, 255, 255, 0.9) !important;
+            opacity: 1 !important;
+        }
+
+        /* dB Scale Labels */
+        .vu-scale {
+            position: relative;
+            height: 10px;
+            margin-top: 2px;
+            margin-left: 18px;
+            margin-right: 50px;
+        }
+
+        .vu-scale-mark {
+            position: absolute;
+            color: #555;
+            font-family: 'Courier New', monospace;
+            font-size: 7.5px;
+            transform: translateX(-50%);
+            white-space: nowrap;
+        }
+
+        .vu-db-readout {
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            font-weight: bold;
+            color: #00ff41;
+            width: 45px;
+            text-align: right;
+            text-shadow: 0 0 3px rgba(0, 255, 65, 0.4);
+        }
+
+        .vu-label.bot {
+            color: #33cc33;
+        }
+
+        .vu-fader-track {
+            width: 4px;
+            height: 80px;
+            /* Reduced specific height for slider visual */
+            background: #222;
+            margin-top: 10px;
+            position: relative;
+            border-radius: 2px;
+            display: none;
+            /* Hide faders for now as they are decorative based on image context, or can be enabled */
+        }
+
+        .vu-fader-track {
+            width: 2px;
+            height: 20px;
+            background: #555;
+            margin: 5px auto 0;
+            position: relative;
+            display: none;
+        }
+
+        .vu-fader-knob {
+            width: 12px;
+            height: 6px;
+            background: #DAA520;
+            border-radius: 1px;
+            position: absolute;
+            top: 10px;
+            left: -5px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+   

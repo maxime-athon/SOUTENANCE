@@ -1,0 +1,328 @@
+{% extends 'base.html' %}
+{% block title %}Gestion des utilisateurs | Archive Hub{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --theme-green: #225A40;
+        --theme-red: #D21E34;
+        --theme-yellow: #F6C400;
+    }
+
+    .btn-custom-primary {
+        background-color: var(--theme-green) !important;
+        color: #ffffff !important;
+        border: none !important;
+        transition: all 0.25s ease;
+    }
+    .btn-custom-primary:hover {
+        background-color: #1a4632 !important;
+        color: #ffffff !important;
+    }
+
+    .text-theme-green { color: var(--theme-green) !important; }
+    .text-theme-red { color: var(--theme-red) !important; }
+
+    .badge-admin {
+        background-color: rgba(246, 196, 0, 0.2) !important;
+        color: #8a6d00 !important;
+        border: 1px solid rgba(246, 196, 0, 0.4) !important;
+    }
+    .badge-archiviste {
+        background-color: rgba(34, 90, 64, 0.12) !important;
+        color: var(--theme-green) !important;
+        border: 1px solid rgba(34, 90, 64, 0.2) !important;
+    }
+    .badge-journaliste {
+        background-color: rgba(108, 117, 125, 0.12) !important;
+        color: #495057 !important;
+        border: 1px solid rgba(108, 117, 125, 0.2) !important;
+    }
+
+    .custom-card {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color) !important;
+    }
+    .filter-box {
+        background-color: var(--bg-body);
+        border: 1px solid var(--border-color) !important;
+    }
+
+    .user-form-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+    }
+    .user-form-field .form-label {
+        display: block;
+        min-height: 20px;
+        margin-bottom: 0.4rem;
+        letter-spacing: 0.01em;
+    }
+    .user-form-field .form-control,
+    .user-form-field .form-select,
+    .user-form-field .input-group > .btn {
+        min-height: 42px;
+    }
+    .user-form-field .form-text {
+        min-height: 18px;
+        margin-top: 0.35rem;
+    }
+    .user-status-field {
+        min-height: 42px;
+        padding: 0.65rem 0.8rem;
+        border: 1px solid var(--border-color);
+        border-radius: 0.65rem;
+        background: var(--bs-tertiary-bg);
+    }
+    @media (max-width: 991.98px) {
+        .user-form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 575.98px) {
+        .user-form-grid { grid-template-columns: 1fr; gap: 0.85rem; }
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">Gestion Centralisée des Utilisateurs</h2>
+        <p class="text-muted small mb-0">Créez de nouveaux comptes, attribuez des rôles et gérez les accès de la plateforme.</p>
+    </div>
+</div>
+
+<!-- SECTION 1 : FORMULAIRE D'AJOUT -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm rounded-4 custom-card">
+            <div class="card-header bg-transparent border-bottom p-4" style="border-color: var(--border-color) !important;">
+                <h4 class="fw-bold mb-0 text-theme-green d-flex align-items-center gap-2">
+                    <i class="bi bi-person-plus-fill"></i> Ajouter un nouvel utilisateur
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" action="{% url 'manage_users' %}" id="addUserForm">
+                    {% csrf_token %}
+                    <p class="small text-muted mb-3"><span class="text-danger">*</span> Champs obligatoires</p>
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger small" role="alert">{{ form.non_field_errors }}</div>
+                    {% endif %}
+                    
+                    <div class="user-form-grid mb-3">
+                        <div class="user-form-field">
+                            <label for="{{ form.username.id_for_label }}" class="form-label fw-semibold small text-muted">Nom d'utilisateur <span class="text-danger">*</span></label>
+                            {{ form.username }}
+                            {% for error in form.username.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                        </div>
+                        <div class="user-form-field">
+                            <label for="{{ form.email.id_for_label }}" class="form-label fw-semibold small text-muted">Adresse Email</label>
+                            {{ form.email }}
+                        </div>
+                        <div class="user-form-field">
+                            <label for="{{ form.password.id_for_label }}" class="form-label fw-semibold small text-muted">Mot de passe <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                {{ form.password }}
+                                <button type="button" class="btn btn-outline-secondary password-toggle" data-password-input="{{ form.password.id_for_label }}" aria-label="Afficher le mot de passe" title="Afficher le mot de passe">
+                                    <i class="bi bi-eye" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">évitez un mot de passe courant.</div>
+                            {% for error in form.password.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="user-form-grid mb-3">
+                        <div class="user-form-field">
+                            <label for="{{ form.first_name.id_for_label }}" class="form-label fw-semibold small text-muted">Prénom</label>
+                            {{ form.first_name }}
+                        </div>
+                        <div class="user-form-field">
+                            <label for="{{ form.last_name.id_for_label }}" class="form-label fw-semibold small text-muted">Nom</label>
+                            {{ form.last_name }}
+                        </div>
+                        <div class="user-form-field">
+                            <label class="form-label fw-semibold small text-muted" for="{{ form.role.id_for_label }}">Rôle et statut</label>
+                            <div class="d-flex align-items-center gap-3">
+                            <div class="flex-grow-1">
+                                {{ form.role }}
+                                {% for error in form.role.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="user-status-field form-check form-switch mb-0 d-flex align-items-center flex-shrink-0">
+                                {{ form.is_active }}
+                                <label class="form-check-label fw-semibold small" for="{{ form.is_active.id_for_label }}">{{ form.is_active.label }}</label>
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end pt-1">
+                        <button class="btn btn-custom-primary rounded-3 px-4 py-2 d-inline-flex align-items-center gap-2 shadow-sm" type="submit">
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span>Créer l'utilisateur</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SECTION 2 : RECHERCHE ET LISTE DES UTILISATEURS -->
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm rounded-4 custom-card">
+            <div class="card-header bg-transparent border-bottom p-4 d-flex flex-wrap justify-content-between align-items-center gap-3" style="border-color: var(--border-color) !important;">
+                <h4 class="fw-bold mb-0 d-flex align-items-center gap-2">
+                    <i class="bi bi-people-fill text-theme-green"></i> Liste des utilisateurs
+                </h4>
+                <span class="badge badge-archiviste rounded-pill px-3 py-2 fw-semibold">{{ users|length }} compte{% if users|length > 1 %}s{% endif %} enregistré{% if users|length > 1 %}s{% endif %}</span>
+            </div>
+
+            <div class="card-body p-4">
+                <form method="get" class="mb-4 p-3 rounded-3 filter-box">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-12 col-md-5">
+                            <label for="q" class="form-label small fw-semibold text-muted">Rechercher</label>
+                            <input type="text" name="q" id="q" class="form-control rounded-3" placeholder="Nom, identifiant, email..." value="{{ current_query }}">
+                        </div>
+                        <div class="col-12 col-sm-6 col-md-3">
+                            <label for="role" class="form-label small fw-semibold text-muted">Rôle</label>
+                            <select name="role" id="role" class="form-select rounded-3">
+                                <option value="">Tous les rôles</option>
+                                <option value="ADMIN" {% if current_role == 'ADMIN' %}selected{% endif %}>Administrateur</option>
+                                <option value="ARCHIVISTE" {% if current_role == 'ARCHIVISTE' %}selected{% endif %}>Archiviste</option>
+                                <option value="JOURNALISTE" {% if current_role == 'JOURNALISTE' %}selected{% endif %}>Journaliste</option>
+                                <option value="LECTEUR" {% if current_role == 'LECTEUR' %}selected{% endif %}>Lecteur</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-sm-6 col-md-2">
+                            <label for="status" class="form-label small fw-semibold text-muted">Statut</label>
+                            <select name="status" id="status" class="form-select rounded-3">
+                                <option value="">Tous</option>
+                                <option value="active" {% if current_status == 'active' %}selected{% endif %}>Actif</option>
+                                <option value="inactive" {% if current_status == 'inactive' %}selected{% endif %}>Inactif</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-2">
+                            <button type="submit" class="btn btn-custom-primary w-100 rounded-3 d-flex align-items-center justify-content-center gap-2">
+                                <i class="bi bi-funnel-fill"></i>
+                                <span>Filtrer</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                {% if users %}
+                    <div class="table-responsive">
+                        <table class="table align-middle table-hover mb-0">
+                            <thead>
+                                <tr class="text-muted small">
+                                    <th>Utilisateur</th>
+                                    <th>Email</th>
+                                    <th>Rôle</th>
+                                    <th>Statut</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                    <tr>
+                                        <td>
+                                            <div class="fw-bold">{{ user.get_full_name|default:user.username }}</div>
+                                            <small class="text-muted">@{{ user.username }}</small>
+                                        </td>
+                                        <td class="small">{{ user.email|default:"—" }}</td>
+                                        <td>
+                                            {% if user.profile.role == 'ADMIN' %}
+                                                <span class="badge badge-admin rounded-pill px-3 py-1 fw-semibold">Admin</span>
+                                            {% elif user.profile.role == 'ARCHIVISTE' %}
+                                                <span class="badge badge-archiviste rounded-pill px-3 py-1 fw-semibold">Archiviste</span>
+                                            {% elif user.profile.role == 'LECTEUR' %}
+                                                <span class="badge badge-journaliste rounded-pill px-3 py-1 fw-semibold">Lecteur</span>
+                                            {% else %}
+                                                <span class="badge badge-journaliste rounded-pill px-3 py-1 fw-semibold">Journaliste</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if user.is_active %}
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill small">Actif</span>
+                                            {% else %}
+                                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill small">Inactif</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="d-flex gap-2 justify-content-end">
+                                                <a class="btn btn-sm btn-outline-secondary rounded-3" href="{% url 'edit_user' user.id %}" title="Modifier">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-sm btn-outline-danger rounded-3" data-bs-toggle="modal" data-bs-target="#deleteUserModal{{ user.id }}" title="Supprimer">
+                                                    <i class="bi bi-trash3"></i>
+                                                </button>
+                                            </div>
+
+                                            <!-- MODAL SUPPRESSION -->
+                                            <div class="modal fade text-start" id="deleteUserModal{{ user.id }}" tabindex="-1" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered">
+                                                    <div class="modal-content rounded-4 border-0 shadow">
+                                                        <div class="modal-body text-center p-4">
+                                                            <div class="icon-shape rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; background-color: rgba(210, 30, 52, 0.1);">
+                                                                <i class="bi bi-exclamation-triangle-fill fs-2 text-theme-red"></i>
+                                                            </div>
+                                                            <h5 class="fw-bold mb-2">Supprimer le compte</h5>
+                                                            <p class="text-muted small mb-4">Êtes-vous sûr de vouloir supprimer l'utilisateur <strong class="text-dark">{{ user.username }}</strong> ? Cette action est irréversible.</p>
+                                                            
+                                                            <form method="post" action="{% url 'delete_user' user.id %}">
+                                                                {% csrf_token %}
+                                                                <div class="d-flex justify-content-center gap-2">
+                                                                    <button type="button" class="btn btn-light rounded-3 px-4" data-bs-dismiss="modal">Annuler</button>
+                                                                    <button type="submit" class="btn btn-danger rounded-3 px-4" style="background-color: var(--theme-red); border: none;">Oui, supprimer</button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-people fs-1 d-block mb-2 opacity-50"></i>
+                        <p class="mb-0">Aucun utilisateur ne correspond à vos critères de recherche.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const inputs = document.querySelectorAll('#addUserForm input:not([type="checkbox"]), #addUserForm select');
+        inputs.forEach(input => {
+            input.classList.add('form-control', 'rounded-3');
+        });
+        const passwordField = document.getElementById('{{ form.password.id_for_label }}');
+        if (passwordField) {
+            passwordField.classList.remove('rounded-3');
+            passwordField.classList.add('rounded-start-3');
+        }
+
+        document.querySelectorAll('.password-toggle').forEach(button => {
+            button.addEventListener('click', () => {
+                const input = document.getElementById(button.dataset.passwordInput);
+                const visible = input.type === 'text';
+                input.type = visible ? 'password' : 'text';
+                button.setAttribute('aria-label', visible ? 'Afficher le mot de passe' : 'Masquer le mot de passe');
+                button.title = visible ? 'Afficher le mot de passe' : 'Masquer le mot de passe';
+                button.querySelector('i').className = visible ? 'bi bi-eye' : 'bi bi-eye-slash';
+            });
+        });
+    });
+
+    
+</script>
+{% endblock %}

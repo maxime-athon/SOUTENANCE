@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+
+{% block title %}Espace Archiviste | SI-Archives{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --theme-green: #225A40;
+        --theme-red: #D21E34;
+        --theme-yellow: #F6C400;
+        --theme-green-soft: rgba(34, 90, 64, 0.1);
+        --theme-red-soft: rgba(210, 30, 52, 0.1);
+        --theme-yellow-soft: rgba(246, 196, 0, 0.15);
+    }
+
+    .btn-custom-green {
+        background-color: var(--theme-green);
+        color: #ffffff;
+        border: none;
+        transition: all 0.2s ease;
+    }
+    .btn-custom-green:hover {
+        background-color: #1a4632;
+        color: #ffffff;
+        transform: translateY(-2px);
+    }
+
+    .btn-custom-red {
+        background-color: var(--theme-red);
+        color: #ffffff;
+        border: none;
+        transition: all 0.2s ease;
+    }
+    .btn-custom-red:hover {
+        background-color: #b0182a;
+        color: #ffffff;
+        transform: translateY(-2px);
+    }
+
+    .bg-soft-green { background-color: var(--theme-green-soft) !important; color: var(--theme-green) !important; }
+    .bg-soft-red { background-color: var(--theme-red-soft) !important; color: var(--theme-red) !important; }
+    .bg-soft-yellow { background-color: var(--theme-yellow-soft) !important; color: #856404 !important; }
+
+    .text-green { color: var(--theme-green) !important; }
+    .text-red { color: var(--theme-red) !important; }
+
+    .border-accent-green { border-left: 4px solid var(--theme-green) !important; }
+    .border-accent-red { border-left: 4px solid var(--theme-red) !important; }
+</style>
+
+<!-- En-tête -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div>
+        <h1 class="fw-bold mb-1 display-6">Espace Archiviste</h1>
+        {% comment %} <p class="text-secondary mb-0">Consultation, traitement et alimentation du fonds documentaire et sonore.</p> {% endcomment %}
+    </div>
+    {% comment %} <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'audio_management' %}" class="btn btn-custom-green rounded-3 px-3 py-2 d-inline-flex align-items-center gap-2 shadow-sm">
+            <i class="bi bi-mic-fill"></i> Gestion Audios
+        </a>
+        <a href="{% url 'document_list' %}" class="btn btn-custom-red rounded-3 px-3 py-2 d-inline-flex align-items-center gap-2 shadow-sm">
+            <i class="bi bi-file-earmark-text-fill"></i> Gestion Documents
+        </a>
+    </div> {% endcomment %}
+</div>
+
+<!-- Statistiques Clés -->
+<div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card border-0 bg-body shadow-sm rounded-4 h-100 p-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="small fw-semibold text-uppercase text-secondary">Fonds global</div>
+                    <h2 class="fw-bold mb-1 mt-2">{{ total_archives }}</h2>
+                    <div class="text-muted small">archives disponibles</div>
+                </div>
+                <div class="p-3 rounded-3 bg-soft-yellow text-warning fs-3">
+                    <i class="bi bi-collection-fill"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card border-0 bg-body shadow-sm rounded-4 h-100 p-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="small fw-semibold text-uppercase text-secondary">Audios</div>
+                    <h2 class="fw-bold mb-1 mt-2 text-green">{{ total_audios }}</h2>
+                    <div class="text-muted small">fichiers sonores</div>
+                </div>
+                <div class="p-3 rounded-3 bg-soft-green text-green fs-3">
+                    <i class="bi bi-mic-fill"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card border-0 bg-body shadow-sm rounded-4 h-100 p-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="small fw-semibold text-uppercase text-secondary">Documents</div>
+                    <h2 class="fw-bold mb-1 mt-2 text-red">{{ total_documents }}</h2>
+                    <div class="text-muted small">fichiers textuels</div>
+                </div>
+                <div class="p-3 rounded-3 bg-soft-red text-red fs-3">
+                    <i class="bi bi-file-earmark-text-fill"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card border-0 bg-body shadow-sm rounded-4 h-100 p-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="small fw-semibold text-uppercase text-secondary">Audios écoutés</div>
+                    <h2 class="fw-bold mb-1 mt-2 text-warning">{{ audio_listens }}</h2>
+                    <div class="text-muted small">écoutes enregistrées</div>
+                </div>
+                <div class="p-3 rounded-3 bg-soft-yellow text-warning fs-3">
+                    <i class="bi bi-headphones"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contribution Personnelle & Historique -->
+<div class="row g-4 mb-4">
+    <div class="col-12 col-lg-5">
+        <div class="card border-0 bg-body shadow-sm rounded-4 h-100 p-4">
+            <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                <i class="bi bi-person-badge-fill text-green"></i> Mes Contributions
+            </h5>
+            <div class="row g-3 mt-1">
+                <div class="col-12 col-sm-6">
+                    <div class="border rounded-4 p-3 bg-body-tertiary">
+                        <div class="small text-uppercase text-secondary">Audios ajoutés</div>
+                        <div class="fw-bold fs-2 mt-1 text-green">{{ my_audio_additions }}</div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6">
+                    <div class="border rounded-4 p-3 bg-body-tertiary">
+                        <div class="small text-uppercase text-secondary">Docs ajoutés</div>
+                        <div class="fw-bold fs-2 mt-1 text-red">{{ my_document_additions }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+  <div class="col-12 col-lg-7">
+        <div class="card border-0 bg-body shadow-sm rounded-4 h-100 p-4">
+            <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                <i class="bi bi-clock-history text-red"></i> Mon Activité Récente
+            </h5>
+            {% if my_recent_uploads %}
+                <div class="d-flex flex-column gap-2">
+                    {% for item in my_recent_uploads %}
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <div class="text-truncate me-2">
+                                <div class="fw-semibold text-truncate" title="{{ item.title }}">
+                                    {% if item.file_type == 'audio' %}
+                                        <i class="bi bi-mic-fill text-success me-1"></i>
+                                    {% else %}
+                                        <i class="bi bi-file-earmark-text-fill text-danger me-1"></i>
+                                    {% endif %}
+                                    {{ item.title }}
+                                </div>
+                                <small class="text-muted d-block">{{ item.uploaded_at|date:"d/m/Y H:i" }}</small>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted mb-0 py-3">Aucun fichier ajouté récemment.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Derniers Enregistrements & Documents -->
+<div class="row g-4">
+    <div class="col-12 col-lg-6">
+        <div class="card border-0 bg-body shadow-sm rounded-4 h-100 p-4">
+            <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                <i class="bi bi-mic-fill text-green"></i> Derniers Audios Classés
+            </h5>
+            {% if recent_audios %}
+                {% for audio in recent_audios %}
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <div class="text-truncate me-2">
+                            <div class="fw-semibold text-truncate">{{ audio.title }}</div>
+                            <div class="small text-muted">{{ audio.uploaded_at|date:"d/m/Y H:i" }}</div>
+                        </div>
+                        {% if audio.category %}
+                            <span class="badge bg-soft-green rounded-pill px-3 py-1 flex-shrink-0">{{ audio.category.name }}</span>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted mb-0 py-2">Aucun audio récent.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-6">
+        <div class="card border-0 bg-body shadow-sm rounded-4 h-100 p-4">
+            <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                <i class="bi bi-file-earmark-text-fill text-red"></i> Derniers Documents Classés
+            </h5>
+            {% if recent_documents %}
+                {% for document in recent_documents %}
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <div class="text-truncate me-2">
+                            <div class="fw-semibold text-truncate">{{ document.title }}</div>
+                            <div class="small text-muted">{{ document.uploaded_at|date:"d/m/Y H:i" }}</div>
+                        </div>
+                        {% if document.category %}
+                            <span class="badge bg-soft-red rounded-pill px-3 py-1 flex-shrink-0">{{ document.category.name }}</span>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted mb-0 py-2">Aucun document récent.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

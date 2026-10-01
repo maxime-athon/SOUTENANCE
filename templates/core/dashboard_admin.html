@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+
+{% block title %}Espace Admin | SI-Archives{% endblock %}
+
+{% block content %}
+<style>
+    /* Palette & Variables */
+    :root {
+        --theme-green: #225A40;
+        --theme-red: #D21E34;
+        --theme-yellow: #F6C400;
+        --theme-green-soft: rgba(34, 90, 64, 0.1);
+        --theme-red-soft: rgba(210, 30, 52, 0.1);
+        --theme-yellow-soft: rgba(246, 196, 0, 0.15);
+    }
+
+    /* Boutons personnalisés */
+    .btn-custom-green {
+        background-color: var(--theme-green);
+        color: #ffffff;
+        border: none;
+        transition: all 0.25s ease;
+    }
+    .btn-custom-green:hover {
+        background-color: #1a4632;
+        color: #ffffff;
+        transform: translateY(-2px);
+    }
+
+    .btn-custom-red {
+        background-color: var(--theme-red);
+        color: #ffffff;
+        border: none;
+        transition: all 0.25s ease;
+    }
+    .btn-custom-red:hover {
+        background-color: #b0182a;
+        color: #ffffff;
+        transform: translateY(-2px);
+    }
+
+    /* Badges & Accents */
+    .bg-soft-green { background-color: var(--theme-green-soft) !important; color: var(--theme-green) !important; }
+    .bg-soft-red { background-color: var(--theme-red-soft) !important; color: var(--theme-red) !important; }
+    .bg-soft-yellow { background-color: var(--theme-yellow-soft) !important; color: #856404 !important; }
+
+    .text-green { color: var(--theme-green) !important; }
+    .text-red { color: var(--theme-red) !important; }
+
+    .border-accent-green { border-left: 4px solid var(--theme-green) !important; }
+    .border-accent-red { border-left: 4px solid var(--theme-red) !important; }
+</style>
+
+<!-- En-tête principal -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div>
+        <h1 class="fw-bold mb-1 display-6">Espace Administrateur</h1>
+        {% comment %} <p class="text-secondary mb-0">Centre de pilotage, de supervision des accès et de gestion du SI-Archives.</p> {% endcomment %}
+    </div>
+    {% comment %} <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'audio_management' %}" class="btn btn-custom-green rounded-3 px-3 py-2 d-inline-flex align-items-center gap-2 shadow-sm">
+            <i class="bi bi-mic-fill"></i> Gestion Audios
+        </a>
+        <a href="{% url 'document_list' %}" class="btn btn-custom-red rounded-3 px-3 py-2 d-inline-flex align-items-center gap-2 shadow-sm">
+            <i class="bi bi-file-earmark-text-fill"></i> Gestion Documents
+        </a>
+    </div> {% endcomment %}
+</div>
+
+<!-- Statistiques principales -->
+<div class="row g-3 mb-4">
+    <div class="col-12 col-xl-4">
+        <div class="card border-0 bg-body shadow-sm rounded-4 h-100 p-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="small fw-semibold text-uppercase text-secondary">Fonds global</div>
+                    <h2 class="fw-bold mb-1 mt-2">{{ total_archives }}</h2>
+                    <div class="text-muted small">archives disponibles</div>
+                </div>
+                <div class="p-3 rounded-3 bg-soft-yellow text-warning fs-3">
+                    <i class="bi bi-collection-fill"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-4">
+        <div class="card border-0 bg-body shadow-sm rounded-4 h-100 p-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="small fw-semibold text-uppercase text-secondary">Documents</div>
+                    <h2 class="fw-bold mb-1 mt-2 text-green">{{ total_docs }}</h2>
+                    <div class="text-muted small">fichiers textuels</div>
+                </div>
+                <div class="p-3 rounded-3 bg-soft-green text-green fs-3">
+                    <i class="bi bi-file-earmark-text-fill"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-4">
+        <div class="card border-0 bg-body shadow-sm rounded-4 h-100 p-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="small fw-semibold text-uppercase text-secondary">Audios</div>
+                    <h2 class="fw-bold mb-1 mt-2 text-red">{{ total_audios }}</h2>
+                    <div class="text-muted small">fichiers sonores</div>
+                </div>
+                <div class="p-3 rounded-3 bg-soft-red text-red fs-3">
+                    <i class="bi bi-mic-fill"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Synthèse Activité et Métriques -->
+<div class="row g-4 mb-4">
+    <div class="col-12 col-lg-4">
+        <div class="card border-0 bg-body shadow-sm rounded-4 h-100">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">Statut du Système</h5>
+                    <i class="bi bi-shield-check text-green fs-5"></i>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a class="list-group-item bg-transparent px-0 py-3 border-bottom text-decoration-none text-body" href="{% url 'manage_users' %}">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span><i class="bi bi-people-fill me-2 text-green"></i>Comptes Utilisateurs</span>
+                            <span class="badge bg-soft-green px-3 py-2 rounded-pill fs-6">{{ total_users }}</span>
+                        </div>
+                    </a>
+                    <a class="list-group-item bg-transparent px-0 py-3 border-bottom text-decoration-none text-body" href="{% url 'global_manage_categories' %}">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span><i class="bi bi-tags-fill me-2 text-red"></i>Catégories Actives</span>
+                            <span class="badge bg-soft-red px-3 py-2 rounded-pill fs-6">{{ total_cats }}</span>
+                        </div>
+                    </a>
+                    <div class="list-group-item bg-transparent px-0 py-3 border-bottom">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span><i class="bi bi-headphones me-2 text-warning"></i>Écoutes audio</span>
+                            <span class="badge bg-soft-yellow px-3 py-2 rounded-pill fs-6">{{ audio_listens }}</span>
+                        </div>
+                    </div>
+                    <div class="list-group-item bg-transparent px-0 py-3 border-bottom">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span><i class="bi bi-eye-fill me-2 text-red"></i>Documents consultés</span>
+                            <span class="badge bg-soft-red px-3 py-2 rounded-pill fs-6">{{ doc_views }}</span>
+                        </div>
+                    </div>
+                    <div class="list-group-item bg-transparent px-0 py-3">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span><i class="bi bi-database-check me-2 text-warning"></i>Base de Données</span>
+                            <span class="badge bg-soft-yellow px-3 py-2 rounded-pill">Opérationnelle</span>
+                        </div>
+                    </div>
+                    
+<div class="list-group-item bg-transparent px-0 pt-2 pb-0 border-0">
+    <div class="p-2 px-3 rounded-3 bg-body-tertiary border border-light-subtle">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <div class="fw-semibold text-uppercase text-secondary" style="font-size: 0.65rem; letter-spacing: 0.5px;">Espace Utilisé</div>
+                <div class="d-flex align-items-baseline gap-1 my-0">
+                    <span class="fw-bold fs-5" style="color: #856404 !important;">{{ used_storage_mb|default:"245.6" }}</span>
+                    <span class="fw-bold small" style="color: #856404 !important; font-size: 0.75rem;">MB</span>
+                </div>
+                <div class="text-muted" style="font-size: 0.7rem;">sur {{ max_storage_gb|default:"5" }} GB ({{ storage_percent|default:"4.8" }}%)</div>
+            </div>
+            <div class="rounded-3 bg-soft-yellow d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                <i class="bi bi-database-fill fs-5" style="color: #856404 !important;"></i>
+            </div>
+        </div>
+    </div>
+</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-8">
+        <div class="card border-0 bg-body shadow-sm rounded-4 h-100">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">Derniers ajouts du système</h5>
+                    <span class="text-muted small">Mises à jour récentes</span>
+                </div>
+                <div class="row g-3">
+                    <!-- Audios Récents -->
+                    <div class="col-md-6">
+                        <div class="border-0 rounded-4 p-3 h-100 bg-body-tertiary">
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <i class="bi bi-mic-fill text-green fs-5"></i>
+                                <h6 class="fw-bold mb-0">Audios Récents</h6>
+                            </div>
+                            {% if recent_audios %}
+                                {% for audio in recent_audios %}
+                                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                                        <div class="text-truncate me-2">
+                                            <div class="fw-semibold text-truncate">{{ audio.title }}</div>
+                                            <div class="small text-muted">{{ audio.uploaded_at|date:"d/m/Y H:i" }}</div>
+                                        </div>
+                                        {% if audio.category %}
+                                            <span class="badge bg-soft-green rounded-pill px-3 py-1 flex-shrink-0">{{ audio.category.name }}</span>
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted small mb-0 py-2">Aucun audio récent.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Documents Récents -->
+                    <div class="col-md-6">
+                        <div class="border rounded-4 p-3 h-100 bg-body-tertiary">
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <i class="bi bi-file-earmark-text-fill text-red fs-5"></i>
+                                <h6 class="fw-bold mb-0">Documents Récents</h6>
+                            </div>
+                            {% if recent_documents %}
+                                {% for document in recent_documents %}
+                                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                                        <div class="text-truncate me-2">
+                                            <div class="fw-semibold text-truncate">{{ document.title }}</div>
+                                            <div class="small text-muted">{{ document.uploaded_at|date:"d/m/Y H:i" }}</div>
+                                        </div>
+                                        {% if document.category %}
+                                            <span class="badge bg-soft-red rounded-pill px-3 py-1 flex-shrink-0">{{ document.category.name }}</span>
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted small mb-0 py-2">Aucun document récent.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

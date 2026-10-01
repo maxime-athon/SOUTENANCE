@@ -1,0 +1,410 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreamSearch | Catalogue Audio</title>
+    
+    <!-- Bootstrap 5.3 & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/search_audio.css' %}">
+     <link rel="icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
+    <script src="{% static 'js/theme.js' %}"></script>
+
+</head>
+<body>
+
+<div class="app-layout">
+
+    <!-- SIDEBAR (GAUCHE) -->
+    <aside class="sidebar">
+        <div>
+            <div class="sidebar-brand">
+                <img src="../../static/images/logo_radio_kara.png" alt="Logo" onerror="this.src='https://via.placeholder.com/120x40/225A40/FFFFFF?text=STREAM+HUB'">
+                <span class="fw-bold fs-6 text-uppercase tracking-wide">SI-Archives</span>
+            </div>
+
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="{% url 'dashboard' %}" class="nav-link">
+                        <i class="bi bi-grid-1x2"></i>
+                        <span>Tableau de bord</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'search_audio' %}" class="nav-link active">
+                        <i class="bi bi-music-note-beamed"></i>
+                        <span>Archives Audio</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'search_document' %}" class="nav-link">
+                        <i class="bi bi-file-earmark-text"></i>
+                        <span>Documents OCR</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="sidebar-footer">
+            <a href="{% url 'logout' %}" class="nav-link text-danger d-flex align-items-center gap-2 px-2 py-1 text-decoration-none">
+                <i class="bi bi-box-arrow-left"></i>
+                <span class="fw-medium">Déconnexion</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- WRAPPER PRINCIPAL -->
+    <div class="main-wrapper">
+
+        <!-- TOPBAR -->
+        <header class="topbar">
+            <button class="btn btn-sm btn-outline-secondary d-lg-none me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasFilters">
+                <i class="bi bi-funnel"></i>
+            </button>
+
+            <!-- Grande barre de recherche élargie et arrondie -->
+            <form method="GET" action="{% url 'search_audio' %}" class="topbar-search mx-auto">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" class="form-control" placeholder="Rechercher par titre, producteur, N° de bande ou d'enregistrement..." value="{{ query }}">
+                    {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
+                    {% if selected_language %}<input type="hidden" name="language" value="{{ selected_language }}">{% endif %}
+                </div>
+            </form>
+
+            <div class="d-flex align-items-center gap-3">
+                <button class="btn btn-link text-decoration-none p-0 text-body" onclick="toggleTheme()" title="Changer le thème">
+                    <i class="bi bi-sun-fill text-warning d-none fs-5" id="themeIconLight"></i>
+                    <i class="bi bi-moon-stars-fill fs-5" id="themeIconDark"></i>
+                </button>
+
+                <div class="d-flex align-items-center gap-2">
+                    <div class="user-avatar">
+                        {{ request.user.username|slice:":1"|upper }}
+                    </div>
+                    <span class="fw-medium small d-none d-sm-inline">{{ request.user.username }}</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- CONTENU CENTRAL -->
+        <main class="content-area">
+            <div class="row g-4">
+                
+                <!-- Filtres -->
+                <div class="col-12 col-lg-3 d-none d-lg-block">
+                    <div class="card border-0 bg-card p-3 rounded-3" style="border: 1px solid var(--border-color) !important;">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold mb-0 text-uppercase small text-muted"><i class="bi bi-sliders me-1"></i> Filtres</h6>
+                            <a href="{% url 'search_audio' %}" class="small text-decoration-none text-muted">Réinitialiser</a>
+                        </div>
+
+                        <form method="GET" action="{% url 'search_audio' %}">
+                            {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-medium">Catégorie</label>
+                                <select name="category" class="form-select form-select-sm">
+                                    <option value="">Toutes les catégories</option>
+                                    {% for cat in categories %}
+                                        <option value="{{ cat.id }}" {% if selected_category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-medium">Langue</label>
+                                <select name="language" class="form-select form-select-sm">
+                                    <option value="">Toutes les langues</option>
+                                    {% for lang in languages %}
+                                        <option value="{{ lang.id }}" {% if selected_language == lang.id|stringformat:"s" %}selected{% endif %}>{{ lang.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-medium">Diffusé à partir du</label>
+                                <input type="date" name="date_from" class="form-control form-control-sm" value="{{ date_from }}">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-medium">Jusqu'au</label>
+                                <input type="date" name="date_to" class="form-control form-control-sm" value="{{ date_to }}">
+                            </div>
+
+                            <button type="submit" class="btn btn-sm w-100 text-white fw-medium" style="background-color: var(--primary-color);">
+                                Appliquer les filtres
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Grille Audio -->
+                <div class="col-12 col-lg-9">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="small text-muted">
+                            <strong>{{ audios|length }}</strong> fichier(s) audio disponible(s)
+                        </span>
+                        {% if query %}
+                            <span class="badge bg-warning text-dark px-2 py-1 rounded-pill small">
+                                Recherche : "{{ query }}"
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
+                        {% for audio in audios %}
+                            <div class="col">
+                                <div class="audio-card">
+                                    <div>
+                                        <div class="card-cover">
+                                            <i class="bi bi-waveform fs-1 text-white opacity-50"></i>
+                                            <div class="position-absolute">
+                                                <button type="button" class="play-overlay-btn" 
+                                                        onclick="playAudio('{% url 'stream_audio' audio.id %}', '{{ audio.title|escapejs }}', '{{ audio.producer|escapejs }}', '{{ audio.id }}')">
+                                                    <i class="bi bi-play-fill ms-1"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div class="d-flex flex-wrap gap-1 mb-2">
+                                            <span class="badge badge-cat rounded-pill">{{ audio.category.name }}</span>
+                                            {% if audio.language %}
+                                                <span class="badge badge-lang rounded-pill">{{ audio.language.name }}</span>
+                                            {% endif %}
+                                        </div>
+<h6 class="fw-bold mb-2">
+    <a href="{% url 'audio_detail' audio.id %}" class="audio-title-link">
+        {{ audio.title }}
+    </a>
+</h6>
+                                        {% if audio.subtitle %}
+                                            <p class="small text-muted mb-2 text-truncate">{{ audio.subtitle }}</p>
+                                        {% endif %}
+
+                                        <div class="small text-muted mb-2">
+                                            <div class="text-truncate"><i class="bi bi-person me-1"></i> {{ audio.producer }}</div>
+                                            {% if audio.band_number or audio.recording_number %}
+                                                <div class="mt-1"><i class="bi bi-disc me-1"></i> Bande: {{ audio.band_number|default:"N/A" }} | N°: {{ audio.recording_number|default:"N/A" }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <!-- Pied de carte avec bouton Téléchargement au survol vert -->
+                                    <div class="border-top pt-2 mt-2 d-flex justify-content-between align-items-center small text-muted">
+                                        <span><i class="bi bi-calendar3 me-1"></i>{{ audio.broadcast_date|date:"d/m/Y" }}</span>
+                                        <a href="{% url 'download_audio' audio.id %}" class="btn-download" title="Télécharger l'audio">
+                                            <i class="bi bi-download"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="col-12">
+                                <div class="text-center py-5 bg-card rounded-3" style="border: 1px solid var(--border-color);">
+                                    <i class="bi bi-music-note-beamed fs-1 text-muted"></i>
+                                    <h6 class="mt-3 fw-bold">Aucune archive audio trouvée</h6>
+                                    <p class="small text-muted mb-0">Ajustez votre recherche ou vos filtres pour trouver du contenu.</p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+        <!-- LECTEUR AUDIO PERMANENT -->
+        <div class="sticky-player" id="globalAudioPlayer">
+            <audio id="mainAudioElement" preload="metadata"></audio>
+
+            <div class="row w-100 align-items-center g-2">
+                <div class="col-12 col-md-3 d-flex align-items-center gap-3">
+                    <div class="rounded-2 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 42px; height: 42px; background-color: rgba(var(--primary-rgb), 0.15); color: var(--primary-color);">
+                        <i class="bi bi-disc-fill fs-4"></i>
+                    </div>
+                    <div class="overflow-hidden">
+                        <div class="fw-bold text-truncate small" id="playerTitle">Sélectionnez une piste</div>
+                        <div class="small text-muted text-truncate" style="font-size: 0.75rem;" id="playerProducer">Producteur</div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 d-flex flex-column align-items-center gap-1">
+                    <div class="d-flex align-items-center gap-3">
+                        <button class="btn-player-control" onclick="toggleRepeat()" id="btnRepeat" title="Répéter">
+                            <i class="bi bi-repeat"></i>
+                        </button>
+                        <button class="btn-player-control" onclick="skipAudio(-10)" title="-10s">
+                            <i class="bi bi-skip-start-fill"></i>
+                        </button>
+                        <button class="btn-player-main" id="btnPlayPause" onclick="togglePlayPause()">
+                            <i class="bi bi-play-fill ms-1" id="playIcon"></i>
+                        </button>
+                        <button class="btn-player-control" onclick="skipAudio(10)" title="+10s">
+                            <i class="bi bi-skip-end-fill"></i>
+                        </button>
+                    </div>
+
+                    <div class="progress-container">
+                        <span class="small text-muted" style="font-size: 0.75rem;" id="currentTime">00:00</span>
+                        <div class="custom-progress-bar" id="progressBar" onclick="seekAudio(event)">
+                            <div class="custom-progress-fill" id="progressFill"></div>
+                        </div>
+                        <span class="small text-muted" style="font-size: 0.75rem;" id="durationTime">00:00</span>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-3 d-flex align-items-center justify-content-end gap-3">
+                    <!-- Bouton Favoris du lecteur avec id dynamique -->
+                    <button class="btn-fav" id="btnFav" onclick="toggleFavorite()" title="Ajouter aux favoris">
+                        <i class="bi bi-heart" id="favIcon"></i>
+                    </button>
+                    <div class="d-flex align-items-center gap-1">
+                        <i class="bi bi-volume-up text-muted"></i>
+                        <input type="range" class="form-range" style="width: 80px;" min="0" max="1" step="0.05" value="1" oninput="setVolume(this.value)">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const audioElement = document.getElementById('mainAudioElement');
+    const playIcon = document.getElementById('playIcon');
+    const progressFill = document.getElementById('progressFill');
+    const currentTimeEl = document.getElementById('currentTime');
+    const durationTimeEl = document.getElementById('durationTime');
+    let currentAudioId = null;
+
+    function playAudio(streamUrl, title, producer, audioId) {
+        currentAudioId = audioId;
+        document.getElementById('playerTitle').textContent = title;
+        document.getElementById('playerProducer').textContent = producer;
+        
+        audioElement.src = streamUrl;
+        audioElement.play();
+        playIcon.className = 'bi bi-pause-fill';
+
+        // Vérifier le statut de favori via l'API lors du lancement
+        checkFavoriteStatus(audioId);
+    }
+
+    function togglePlayPause() {
+        if (!audioElement.src) return;
+        if (audioElement.paused) {
+            audioElement.play();
+            playIcon.className = 'bi bi-pause-fill';
+        } else {
+            audioElement.pause();
+            playIcon.className = 'bi bi-play-fill ms-1';
+        }
+    }
+
+    function formatTime(seconds) {
+        if (isNaN(seconds)) return "00:00";
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    }
+
+    audioElement.addEventListener('timeupdate', () => {
+        if (audioElement.duration) {
+            const percent = (audioElement.currentTime / audioElement.duration) * 100;
+            progressFill.style.width = `${percent}%`;
+            currentTimeEl.textContent = formatTime(audioElement.currentTime);
+            durationTimeEl.textContent = formatTime(audioElement.duration);
+        }
+    });
+
+    function seekAudio(event) {
+        const progressBar = document.getElementById('progressBar');
+        const rect = progressBar.getBoundingClientRect();
+        const clickX = event.clientX - rect.left;
+        const width = rect.width;
+        if (audioElement.duration) {
+            audioElement.currentTime = (clickX / width) * audioElement.duration;
+        }
+    }
+
+    function skipAudio(seconds) {
+        if (audioElement.src) {
+            audioElement.currentTime += seconds;
+        }
+    }
+
+    function setVolume(val) {
+        audioElement.volume = val;
+    }
+
+    function toggleRepeat() {
+        audioElement.loop = !audioElement.loop;
+        document.getElementById('btnRepeat').classList.toggle('text-warning', audioElement.loop);
+    }
+
+    // Bascule dynamique du thème
+    // TOGGLE FAVORIS ASYNCHRONE (AJAX)
+    function toggleFavorite() {
+        if (!currentAudioId) return;
+
+        fetch(`/audio/toggle-favorite/${currentAudioId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const favIcon = document.getElementById('favIcon');
+            const btnFav = document.getElementById('btnFav');
+            
+            if (data.is_favorite) {
+                btnFav.classList.add('active');
+                favIcon.className = 'bi bi-heart-fill';
+            } else {
+                btnFav.classList.remove('active');
+                favIcon.className = 'bi bi-heart';
+            }
+        });
+    }
+
+    function checkFavoriteStatus(audioId) {
+        fetch(`/audio/check-favorite/${audioId}/`)
+            .then(response => response.json())
+            .then(data => {
+                const favIcon = document.getElementById('favIcon');
+                const btnFav = document.getElementById('btnFav');
+                if (data.is_favorite) {
+                    btnFav.classList.add('active');
+                    favIcon.className = 'bi bi-heart-fill';
+                } else {
+                    btnFav.classList.remove('active');
+                    favIcon.className = 'bi bi-heart';
+                }
+            });
+    }
+
+    // Récupération du Cookie CSRF Django
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+</body>
+</html>

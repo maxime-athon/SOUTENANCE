@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}Supprimer utilisateur | Archive Hub{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card border-0 bg-body shadow-sm rounded-4">
+            <div class="card-body p-4">
+                <h2 class="fw-bold mb-3 text-danger">Supprimer l'utilisateur</h2>
+                <p class="text-muted">Êtes-vous sûr de vouloir supprimer l'utilisateur <strong>{{ user.username }}</strong> ? Cette action est irréversible.</p>
+                <form method="post">
+                    {% csrf_token %}
+                    <button class="btn btn-danger rounded-3" style="background-color: #D21E34; border: none;" type="submit">Confirmer la suppression</button>
+                    <a href="{% url 'manage_users' %}" class="btn btn-outline-secondary rounded-3 ms-2">Annuler</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

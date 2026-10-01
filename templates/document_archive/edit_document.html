@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}Modifier : {{ form.instance.title }} | Archive Hub{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --theme-green: #225A40;
+    }
+    .btn-custom-primary {
+        background-color: var(--theme-green) !important;
+        color: #ffffff !important;
+        border: none !important;
+        transition: all 0.25s ease;
+    }
+    .btn-custom-primary:hover {
+        background-color: #1a4632 !important;
+        color: #ffffff !important;
+    }
+</style>
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div>
+        <h1 class="fw-bold mb-1">Modifier le document</h1>
+        <p class="text-muted mb-0">Mise à jour des informations et des métadonnées de l'archive.</p>
+    </div>
+    <a href="{% url 'document_detail' form.instance.id %}" class="btn btn-outline-secondary rounded-3 d-inline-flex align-items-center gap-2">
+        <i class="bi bi-arrow-left"></i>
+        <span>Annuler et revenir</span>
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden" style="background-color: var(--bg-card); border: 1px solid var(--border-color) !important;">
+            <div class="card-header bg-transparent border-bottom p-4" style="border-color: var(--border-color) !important;">
+                <h5 class="fw-bold mb-0 d-flex align-items-center gap-2">
+                    <i class="bi bi-pencil-square text-success"></i>
+                    Édition des métadonnées
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger rounded-3">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <div class="row g-3">
+                        {% for field in form %}
+                            <div class="col-12 {% if field.name == 'title' or field.name == 'description' %}col-md-12{% else %}col-md-6{% endif %}">
+                                <label for="{{ field.id_for_label }}" class="form-label fw-semibold small text-muted">
+                                    {{ field.label }}
+                                </label>
+                                
+                                {% if field.field.widget.input_type == 'file' %}
+                                    <input type="file" name="{{ field.name }}" id="{{ field.id_for_label }}" class="form-control rounded-3">
+                                    {% if field.value %}
+                                        <div class="form-text mt-1">
+                                            Fichier actuel : <a href="{{ field.value.url }}" target="_blank" class="text-success text-decoration-none fw-medium">{{ field.value.name }}</a>
+                                        </div>
+                                    {% endif %}
+                                {% else %}
+                                    <div class="input-group">
+                                        {{ field }}
+                                    </div>
+                                {% endif %}
+
+                                {% if field.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ field.errors|striptags }}
+                                    </div>
+                                {% endif %}
+                                {% if field.help_text %}
+                                    <div class="form-text text-muted extra-small">{{ field.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <hr class="my-4 opacity-25" style="border-color: var(--border-color);">
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{% url 'document_detail' form.instance.id %}" class="btn btn-light rounded-3 px-4">Annuler</a>
+                        <button type="submit" class="btn btn-custom-primary rounded-3 px-4 d-inline-flex align-items-center gap-2">
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span>Enregistrer les modifications</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Injection automatique des classes Bootstrap sur les champs générés par Django
+    document.addEventListener("DOMContentLoaded", function() {
+        const inputs = document.querySelectorAll('.card-body input, .card-body select, .card-body textarea');
+        inputs.forEach(input => {
+            if (input.type !== 'file' && input.type !== 'checkbox') {
+                input.classList.add('form-control', 'rounded-3');
+            } else if (input.tagName === 'SELECT') {
+                input.classList.add('form-select', 'rounded-3');
+            }
+        });
+    });
+</script>
+{% endblock %}

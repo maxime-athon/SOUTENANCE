@@ -1,0 +1,540 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{% if is_editing %}Modifier{% else %}Ajouter{% endif %} Fichier Audio - Archive Hub{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+                        <div class="row justify-content-center">
+                            <div class="col-12">
+                                <div class="form-container">
+
+
+
+                                    <form method="post" enctype="multipart/form-data" id="audioForm">
+                                        {% csrf_token %}
+
+                                        {% if form.errors %}
+                                        <div class="alert alert-danger" role="alert">
+                                            <strong>Le formulaire contient une erreur :</strong>
+                                            {{ form.non_field_errors }}
+                                            {% for field in form %}
+                                                {% for error in field.errors %}
+                                                    <div>{{ field.label }} : {{ error }}</div>
+                                                {% endfor %}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+
+                                        <div class="row">
+                                            <!-- LEFT COLUMN: Form Inputs -->
+                                            <div class="col-lg-6 pe-lg-4">
+                    <div class="form-title text-start">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <h3 class="d-inline-block ms-2">{% if is_editing %}Modification de l'archive{% else %}Informations{% endif %}</h3>
+                    </div>
+
+                                               <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="{{ form.title.id_for_label }}" class="form-label">
+                                        <i class="fas fa-heading me-1 text-primary"></i>Titre du fichier <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.title }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="{{ form.subtitle.id_for_label }}" class="form-label">
+                                        <i class="fas fa-pen-fancy me-1 text-secondary"></i>Sous-titre
+                                    </label>
+                                    {{ form.subtitle }}
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="{{ form.category.id_for_label }}" class="form-label">
+                                        <i class="fas fa-folder-open me-1 text-primary"></i>Catégorie <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.category }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="{{ form.band_number.id_for_label }}" class="form-label">
+                                        <i class="fas fa-compact-disc me-1 text-secondary"></i>Numéro de bande
+                                    </label>
+                                    {{ form.band_number }}
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="{{ form.language.id_for_label }}" class="form-label">
+                                        <i class="fas fa-globe me-1 text-primary"></i>Langue
+                                    </label>
+                                    {{ form.language }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="{{ form.recording_number.id_for_label }}" class="form-label">
+                                        <i class="fas fa-list-ol me-1 text-secondary"></i>Numéro d'enregistrement
+                                    </label>
+                                    {{ form.recording_number }}
+                                </div>
+
+                                <div class="col-md-12">
+                                    <label for="{{ form.producer.id_for_label }}" class="form-label">
+                                        <i class="fas fa-user-circle me-1 text-primary"></i>Producteur/Réalisateur <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.producer }}
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="{{ form.recording_date.id_for_label }}" class="form-label">
+                                        <i class="fas fa-calendar-check me-1 text-primary"></i>Date d'enregistrement <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.recording_date }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="{{ form.broadcast_date.id_for_label }}" class="form-label">
+                                        <i class="fas fa-calendar-alt me-1 text-secondary"></i>Date de diffusion <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.broadcast_date }}
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="{{ form.duration.id_for_label }}" class="form-label">
+                                        <i class="fas fa-hourglass-end me-1 text-primary"></i>Durée (HH:MM:SS)
+                                    </label>
+                                    {{ form.duration }}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="{{ form.speed.id_for_label }}" class="form-label">
+                                        <i class="fas fa-gauge me-1 text-secondary"></i>Vitesse
+                                    </label>
+                                    {{ form.speed }}
+                                </div>
+
+                                <div class="col-12">
+                                    <label for="descriptionInput" class="form-label">
+                                        <i class="fas fa-align-left me-1 text-primary"></i>Description
+                                    </label>
+                                    <textarea id="descriptionInput" name="description" class="form-control" placeholder="Entrez une description pour cet audio..." rows="3"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="file-upload-area mt-4" id="fileUploadArea">
+                                <i class="fas fa-cloud-upload-alt d-block"></i>
+                                <h5>Glissez-déposez votre fichier audio ici</h5>
+                                <p class="text-muted mb-1">ou cliquez pour sélectionner un fichier</p>
+                                    <small class="text-muted d-block mb-2">Formats acceptés: MP3, WAV, OGG, FLAC, M4A, WebM (Max: 100MB)</small>
+                                {{ form.file }}
+                            </div>
+
+                            <div class="file-info" id="fileInfo">
+                                <i class="fas fa-check-circle me-2 text-success"></i>
+                                <strong id="fileName"></strong>
+                                <span id="fileSize" class="ms-2 text-muted"></span>
+                            </div>
+                        </div>
+
+          {% comment %} le conteneur {% endcomment %}
+            <div class="col-lg-6 ps-lg-4" style="border-left: 1px solid var(--border-color);"> 
+                  {% comment %} Zone de taf audio {% endcomment %}
+                                                <div class="audio-editing-area" id="audioEditingArea">
+                                                    <h5 class="text-center mb-3">
+                                                        <i class="fas fa-edit me-2"></i>Édition Audio
+                                                    </h5>
+
+                                                    <!-- Waveform 1 Display -->
+                                                    <div class="waveform-container mb-3">
+                                                        <canvas id="waveformCanvas" width="1600" height="400" tabindex="0"
+                                                            aria-label="Forme d'onde audio. Cliquez ici puis utilisez les flèches ou Page précédente/suivante pour parcourir l'audio."
+                                                            title="Cliquez ici, puis utilisez ←/→ ou Page précédente/Page suivante pour parcourir l'onde"
+                                                            style="display: block; width: 100%; height: 200px; cursor: crosshair;"></canvas>
+                                                                                                <!-- VU Meter Display - Premium Edition -->
+                                                    <div class="vu-meter-wrapper">
+                                                        <div class="vu-meter-container">
+                                                            <div class="vu-header">
+                                                                <span style="color: #1a1818;"><i class="fas fa-signal me-2"></i>NIVEAUX AUDIO (dB)</span>
+                                                                <span id="vuStatus" style="font-size: 9px; color: #555;">PRO MONITORING</span>
+                                                            </div>
+                                                            <div class="vu-display">
+                                                                <!-- Left Channel -->
+                                                                <div class="vu-channel-row">
+                                                                    <div class="vu-channel-label">L</div>
+                                                                    <div class="vu-bar" id="vuLeft">
+                                                                        <!-- Segments will be generated by JS -->
+                                                                    </div>
+                                                                    <div class="vu-db-readout" id="vuLeftDb">-∞ dB</div>
+                                                                </div>
+                                                                
+                                                                <!-- Right Channel -->
+                                                                <div class="vu-channel-row">
+                                                                    <div class="vu-channel-label">R</div>
+                                                                    <div class="vu-bar" id="vuRight">
+                                                                        <!-- Segments will be generated by JS -->
+                                                                    </div>
+                                                                    <div class="vu-db-readout" id="vuRightDb">-∞ dB</div>
+                                                                </div>
+                                                            </div>
+                                                            <!-- dB Scale -->
+                                                            <div class="vu-scale" id="vuScale">
+                                                                <div class="vu-scale-mark" style="left: 0%">-60</div>
+                                                                <div class="vu-scale-mark" style="left: 20%">-40</div>
+                                                                <div class="vu-scale-mark" style="left: 40%">-20</div>
+                                                                <div class="vu-scale-mark" style="left: 60%">-10</div>
+                                                                <div class="vu-scale-mark" style="left: 75%">-5</div>
+                                                                <div class="vu-scale-mark" style="left: 85%; color: #ffcc00;">0</div>
+                                                                <div class="vu-scale-mark" style="left: 95%; color: #ff3333;">+6</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+             </div>
+
+                                                    <!-- Editing Tools & Edit Operations -->
+                                                    <div class="edit-operations mb-3">
+                                                        <div
+                                                            style="display: flex; justify-content: center; align-items: center; gap: 2rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                            <!-- Playback Time Display -->
+                            <div style="display: flex; align-items: center; padding: 0.5rem 1rem; background: rgba(34, 90, 64, 0.1); border-radius: 8px; border: 2px solid var(--primary-color);">
+                                <i class="fas fa-play me-2" style="color: var(--primary-color); font-size: 1.2rem;"></i>
+                                <span id="liveTimeDisplay" style="font-weight: bold; color: var(--primary-color); font-size: 1.1rem;">00:00</span>
+                            </div>
+
+                                                            <!-- Recording Time Display -->
+                                                            <div style="display: flex; align-items: center; padding: 0.5rem 1rem; background: rgba(220, 53, 69, 0.1); border-radius: 8px; border: 2px solid #dc3545;"
+                                                                id="recordingTimeContainer">
+                                                                <i class="fas fa-circle me-2"
+                                                                    style="color: #dc3545; font-size: 1.2rem; animation: pulse-dot 1s infinite;"></i>
+                                                                <span id="recordingTimeDisplay"
+                                                                    style="font-weight: bold; color: #dc3545; font-size: 1.1rem;">00:00.00</span>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Row 1: Navigation & Recording -->
+                                                        <!-- Editing Tools & Edit Operations -->
+                                                        <div class="edit-operations mb-3">
+                                                            <!-- ROW 1: Navigation & Transport (6 Groups) -->
+                                                            <div class="audio-tool-row">
+                                                                <!-- Group 1: Zoom -->
+                                                                <div class="audio-btn-group">
+                                                                    <button type="button" id="zoomInBtn"
+                                                                        class="btn audio-btn" title="Zoom In"><i
+                                                                            class="fas fa-search-plus"></i></button>
+                                                                    <button type="button" id="zoomOutBtn"
+                                                                        class="btn audio-btn" title="Zoom Out"><i
+                                                                            class="fas fa-search-minus"></i></button>
+                                                                    <button type="button" id="fitToViewBtn"
+                                                                        class="btn audio-btn" title="Fit to View"><i
+                                                                            class="fas fa-compress-arrows-alt"></i></button>
+                                                                </div>
+                                                                <!-- Group 2: Play/Rec -->
+                                                                <div class="audio-btn-group">
+                                                                    <button type="button" id="playStopBtn"
+                                                                        class="btn audio-btn" title="Lire/Pause"><i
+                                                                            class="fas fa-pause"></i></button>
+                                                                    <button type="button" id="recordBtn"
+                                                                        class="btn audio-btn" title="Enregistrer"><i
+                                                                            class="fas fa-circle"></i></button>
+                                                                    <button type="button" id="stopBtn"
+                                                                        class="btn audio-btn" title="Arrêter"><i
+                                                                            class="fas fa-stop"></i></button>
+                                                                </div>
+                                                                <!-- Group 3: Nav -->
+                                                                <div class="audio-btn-group">
+                                                                    <button type="button" id="goToStartBtn"
+                                                                        class="btn audio-btn" title="Début"><i
+                                                                            class="fas fa-step-backward"></i></button>
+                                                                    <button type="button" id="rewindBtn"
+                                                                        class="btn audio-btn" title="Rembobiner"><i
+                                                                            class="fas fa-backward"></i></button>
+                                                                    <button type="button" id="fastForwardBtn"
+                                                                        class="btn audio-btn" title="Avancer"><i
+                                                                            class="fas fa-forward"></i></button>
+                                                                    <button type="button" id="goToEndBtn"
+                                                                        class="btn audio-btn" title="Fin"><i
+                                                                            class="fas fa-step-forward"></i></button>
+                                                                </div>
+                                                                <!-- Group 4: Loop -->
+                                                                <div class="audio-btn-group">
+                                                                    <button type="button" id="playLoopBtn"
+                                                                        class="btn audio-btn" title="Boucle"><i
+                                                                            class="fas fa-sync-alt"></i></button>
+                                                                </div>
+                                                                <!-- Group 5: Select -->
+                                                                <div class="audio-btn-group">
+                                                                    <button type="button" id="selectAllBtn"
+                                                                        class="btn audio-btn"
+                                                                        title="Tout sélectionner"><i
+                                                                            class="fas fa-expand"></i></button>
+                                                                </div>
+                                                              
+                                                            </div>
+
+                                                            <!-- ROW 3: Editing Tools -->
+                                                            <div class="audio-tool-row">
+                                                                <button type="button" id="cutBtn" class="btn audio-btn"
+                                                                    title="Couper"><i class="fas fa-cut"></i></button>
+                                                                <button type="button" id="pasteBtn"
+                                                                    class="btn audio-btn" title="Coller" disabled><i
+                                                                        class="fas fa-paste"></i></button>
+                                                                <button type="button" id="copyBtn" class="btn audio-btn"
+                                                                    title="Copier"><i class="fas fa-copy"></i></button>
+                                                                <button type="button" id="deleteBtn"
+                                                                    class="btn audio-btn" title="Supprimer"><i
+                                                                        class="fas fa-trash-alt"></i></button>
+                                                                <button type="button" id="fadeInBtn"
+                                                                    class="btn audio-btn" title="Fade In"><i
+                                                                        class="fas fa-signal"></i></button>
+                                                                <button type="button" id="fadeOutBtn"
+                                                                    class="btn audio-btn" title="Fade Out"><i
+                                                                        class="fas fa-signal fa-flip-horizontal"></i></button>
+                                                                <button type="button" id="normalizeBtn"
+                                                                    class="btn audio-btn" title="Normaliser"><i
+                                                                        class="fas fa-chart-line"></i></button>
+                                                                <button type="button" id="trimBtn" class="btn audio-btn"
+                                                                    title="Trim"><i
+                                                                        class="fas fa-crop-alt"></i></button>
+                                                                <button type="button" id="clearSelectionBtn"
+                                                                    class="btn audio-btn" title="Effacer sélection"><i
+                                                                        class="fas fa-times"></i></button>
+                                                                
+                                                                <button type="button" id="undoBtn"
+                                                                        class="btn audio-btn" title="Annuler"
+                                                                        disabled><i class="fas fa-undo"></i></button>
+                                                                <button type="button" id="redoBtn" class="btn audio-btn"
+                                                                    title="Rétablir" disabled><i
+                                                                        class="fas fa-redo"></i></button>
+                                                                <button type="button" id="deleteSelectionBtn"
+                                                                    class="btn audio-btn" title="Effacer la section"><i
+                                                                        class="fas fa-trash"></i></button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Form Actions -->
+                                                    <div class="form-actions mb-3">
+                                                        <button type="submit"
+                                                            class="btn btn-primary-custom btn-custom me-3">
+                                                            <i class="fas fa-upload me-2"></i>
+                                                            {% if is_editing %}Mettre à jour{% else %}Archiver le fichier{% endif %}
+                                                        </button>
+                                                        <a href="{% url 'audio_management' %}"
+                                                            class="btn btn-secondary-custom btn-custom">
+                                                            <i class="fas fa-arrow-left me-2"></i>Annuler
+                                                        </a>
+                                                    </div>
+
+                                                </div>
+
+                                                <!-- Audio Properties -->
+                                                <div class="audio-properties mb-3">
+                                                    <h6><i class="fas fa-info-circle me-2"></i>Propriétés Audio</h6>
+                                                    <div class="row">
+                                                        <div class="col-md-3">
+                                                            <small class="text-muted">Durée:</small>
+                                                            <div id="audioDuration">00:00.000</div>
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <small class="text-muted">Fréquence:</small>
+                                                            <div id="audioSampleRate">44100 Hz</div>
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <small class="text-muted">Canaux:</small>
+                                                            <div id="audioChannels">2</div>
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <small class="text-muted">Format:</small>
+                                                            <div id="audioFormat">WebM</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Volume/Amplify Control -->
+                                                <div class="volume-control mb-3">
+                                                    <h6><i class="fas fa-volume-up me-2"></i>Contrôle du Volume</h6>
+                                                    <div class="d-flex align-items-center">
+                                                        <label for="amplifySlider" class="form-label me-3">Amplifier
+                                                            (dB)</label>
+                                                        <input type="range" class="form-range" id="amplifySlider"
+                                                            min="-20" max="20" step="0.1" value="0" style="flex: 1;">
+                                                        <span id="amplifyValue" class="ms-3">0.0 dB</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="audio-recording-area" id="audioRecordingArea">
+                                                <h5 class="text-center mb-3">
+                                                    <i class="fas fa-microphone me-2"></i>Ou enregistrez directement
+                                                </h5>
+
+                                                <div id="recordingNotification" class="alert alert-danger small d-none"
+                                                    role="alert" aria-live="assertive"></div>
+
+                                                <div class="mb-3 text-center">
+                                                    <label for="recordingSourceMode" class="form-label">
+                                                        <i class="fas fa-sliders-h me-1"></i>Type de capture:
+                                                    </label>
+                                                    <select id="recordingSourceMode" class="form-select">
+                                                        <option value="input">Entrée audio (carte son, micro ou entrée ligne)</option>
+                                                        <option value="system">Audio de cet ordinateur</option>
+                                                    </select>
+                                                    <div class="form-text text-muted">
+                                                        Un seul type de capture est actif à la fois : les sources ne sont jamais mélangées.
+                                                    </div>
+                                                </div>
+                                                <div class="text-center">
+                                                    <button type="button" id="playBtn"
+                                                        class="btn btn-success btn-custom" disabled>
+                                                        <i class="fas fa-play me-2"></i>Écouter
+                                                    </button>
+                                                </div>
+                                                <div class="mt-3 text-center">
+                                                    <div id="recordingStatus" class="text-muted">
+                                                        <i class="fas fa-info-circle me-1"></i>Cliquez sur "Enregistrer"
+                                                        pour
+                                                        commencer
+                                                    </div>
+                                                    <div id="recordingTimer" class="mt-3" style="display: none;">
+                                                        <i class="fas fa-circle text-danger"></i><span
+                                                            id="timer">00:00</span>
+                                                    </div>
+                                                </div>
+                                                <audio id="recordedAudio" controls
+                                                    style="display: none; width: 100%; margin-top: 1rem;"></audio>
+                                            </div>
+
+
+
+                                            <div class="audio-preview" id="audioPreview">
+                                                <h5 class="preview-title">
+                                                    <i class="fas fa-eye me-2"></i>Aperçu du fichier
+                                                </h5>
+                                                <div class="preview-content">
+                                                    <div class="row g-3">
+                                                        <div class="col-md-6">
+                                                            <strong>Titre:</strong> <span id="previewTitle">Non
+                                                                spécifié</span><br>
+                                                            <strong>Sous-titre:</strong> <span id="previewSubtitle">Non
+                                                                spécifié</span><br>
+                                                            <strong>Catégorie:</strong> <span id="previewCategory">Non
+                                                                spécifiée</span><br>
+                                                            <strong>Producteur:</strong> <span id="previewProducer">Non
+                                                                spécifié</span>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <strong>Numéro de bande:</strong> <span
+                                                                id="previewBandNumber">Non
+                                                                spécifié</span><br>
+                                                            <strong>Numéro d'enregistrement:</strong> <span
+                                                                id="previewRecordingNumber">Non spécifié</span><br>
+                                                            <strong>Date d'enregistrement:</strong> <span
+                                                                id="previewRecordingDate">Non spécifiée</span><br>
+                                                            <strong>Date de diffusion:</strong> <span
+                                                                id="previewBroadcastDate">Non
+                                                                spécifiée</span><br>
+                                                            <strong>Durée:</strong> <span id="previewDuration">Non
+                                                                spécifiée</span><br>
+                                                            <strong>Vitesse:</strong> <span id="previewSpeed">Non
+                                                                spécifiée</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-center mt-3">
+                                                        <i class="fas fa-music fa-3x text-primary"></i>
+                                                        <p class="mt-2 mb-0">Fichier audio prêt</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-actions">
+                                            </div>
+
+                                        </div> <!-- End Right Column -->
+                                </div> <!-- End Row -->
+
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </div>
+</div>
+
+<!-- Modale Sélection Mode d'Enregistrement -->
+<div class="modal fade" id="recordingModeModal" tabindex="-1" aria-labelledby="recordingModeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #225A40; color: white;">
+                <h5 class="modal-title" id="recordingModeModalLabel"><i class="fas fa-sliders-h me-2"></i>Mode d'enregistrement Radio</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small">Sélectionnez la source d'enregistrement. Les autres entrées seront automatiquement coupées.</p>
+                
+                <div class="list-group">
+                    <label class="list-group-item d-flex align-items-center gap-3 cursor-pointer">
+                        <input class="form-check-input flex-shrink-0" type="radio" name="recModeRadio" value="line_in" checked>
+                        <div>
+                            <strong>1. Numérisation via entrée audio</strong>
+                            <div class="text-muted small">Capture uniquement les entrées audio. Micro PC coupé.</div>
+                        </div>
+                    </label>
+
+                    <label class="list-group-item d-flex align-items-center gap-3 cursor-pointer">
+                        <input class="form-check-input flex-shrink-0" type="radio" name="recModeRadio" value="studio_mic">
+                        <div>
+                            <strong>2. Enregistrement Micro Studio</strong>
+                            <div class="text-muted small">Voix des animateurs (Micro XLR branché sur interface).</div>
+                        </div>
+                    </label>
+
+                    <label class="list-group-item d-flex align-items-center gap-3 cursor-pointer">
+                        <input class="form-check-input flex-shrink-0" type="radio" name="recModeRadio" value="system_audio">
+                        <div>
+                            <strong>3. Enregistrement Son Système / Stream</strong>
+                            <div class="text-muted small">Musiques/Pubs sorties de l'ordinateur (Loopback).</div>
+                        </div>
+                    </label>
+
+                    <label class="list-group-item d-flex align-items-center gap-3 cursor-pointer">
+                        <input class="form-check-input flex-shrink-0" type="radio" name="recModeRadio" value="multitrack">
+                        <div>
+                            <strong>4. Enregistrement Multi-pistes (Simultané)</strong>
+                            <div class="text-muted small">Capture simultanée du système et du micro.</div>
+                        </div>
+                    </label>
+                </div>
+                
+                <!-- Liste des périphériques audio (Placée ici dans la modale) -->
+        <div class="mb-3" id="hardwareSelectContainer">
+          <label for="microphoneSelect" class="form-label fw-bold">Périphérique d'entrée audio :</label>
+          <select id="microphoneSelect" class="form-select">
+            <option value="">Détection des entrées audio...</option>
+          </select>
+        </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" id="confirmStartRecordBtn" class="btn text-white" style="background-color: #225A40;">
+                    <i class="fas fa-microphone me-1"></i> Démarrer l'enregistrement
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'js/audio_utils.js' %}" defer></script>
+<script src="{% static 'js/add_audio.js' %}" defer></script>
+<script src="{% static 'js/audio_editor.js' %}" defer></script>
+<script src="{% static 'js/audio_recorder.js' %}" defer></script>
+<script src="../../static/js/extraction_audio.js" defer></script>
+
+<!-- Charge l'audio existant sans lancer le micro -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Django injecte directement l'URL ici, plus besoin d'input caché
+    const audioUrl = "{{ audio_stream_url|default:'' }}";
+    
+    if (audioUrl && window.audioEditor && typeof window.audioEditor.loadAudioFromUrl === 'function') {
+        window.audioEditor.loadAudioFromUrl(audioUrl);
+    }
+});
+</script>
+{% endblock %}

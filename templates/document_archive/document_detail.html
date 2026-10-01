@@ -1,0 +1,282 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ document.title }} | Archive Hub{% endblock %}
+
+{% block content %}
+<!-- Entête avec fil d'Ariane et boutons d'action -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div>
+        <div class="d-flex align-items-center gap-2">
+            <h1 class="fw-bold mb-0 fs-2">{{ document.title }}</h1>
+            {% if document.compressed %}
+                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill small" title="Document optimisé">PDF Compressé</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Actions principales -->
+    <div class="d-flex flex-wrap align-items-center gap-2">
+        <a href="{% url 'document_list' %}" class="btn btn-outline-secondary rounded-3 d-inline-flex align-items-center gap-2">
+            <i class="bi bi-arrow-left"></i>
+            <span>Retour</span>
+        </a>
+
+        {% if can_edit %}
+
+         <!-- Bouton pour relancer l'OCR -->
+            <a href="{% url 'extract_ocr' document.id %}" class="btn btn-outline-secondary rounded-3 d-inline-flex align-items-center gap-2" title="Relancer la reconnaissance de texte">
+                <i class="bi bi-cpu-fill"></i>
+                <span>Relancer OCR</span>
+            </a>
+            <!-- Bouton Modifier métadonnées -->
+            <a href="{% url 'edit_document' document.id %}" class="btn btn-outline-primary rounded-3 d-inline-flex align-items-center gap-2" title="Modifier les métadonnées">
+                <i class="bi bi-pencil-square"></i>
+            </a>
+            <!-- Action de suppression harmonisée (Modal) -->
+            <button type="button" class="btn btn-outline-danger rounded-3 d-inline-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#deleteDocModal">
+                <i class="bi bi-trash3-fill"></i>
+            </button>
+        {% endif %}
+
+        <a class="btn btn-custom-primary rounded-3 d-inline-flex align-items-center gap-2 shadow-sm" href="{{ document.file.url }}" target="_blank" download>
+            <i class="bi bi-download"></i>
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Colonne Gauche : Aperçu du fichier & Texte OCR -->
+    <div class="col-12 col-lg-8">
+        
+        <!-- Carte de Prévisualisation Universelle -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden" style="background-color: var(--bg-card); border: 1px solid var(--border-color) !important;">
+            <div class="card-header bg-transparent border-bottom p-3 d-flex justify-content-between align-items-center" style="border-color: var(--border-color) !important;">
+                <h5 class="fw-bold mb-0 d-flex align-items-center gap-2">
+                    <i class="bi bi-eye-fill text-custom-primary"></i>
+                    Aperçu du document
+                </h5>
+                <a href="{{ document.file.url }}" target="_blank" class="btn btn-sm btn-link text-custom-primary text-decoration-none fw-semibold">
+                    Plein écran <i class="bi bi-box-arrow-up-right"></i>
+                </a>
+            </div>
+            
+            <div class="card-body p-0 bg-body-tertiary d-flex justify-content-center align-items-center overflow-hidden" style="min-height: 520px; max-height: 650px;">
+                
+                {% with ext=document.file.name|lower %}
+                    {% if '.pdf' in ext %}
+                        <object data="{{ document.file.url }}" type="application/pdf" class="w-100 h-100" style="min-height: 520px;">
+                            <div class="text-center p-5 my-auto">
+                                <div class="icon-shape icon-tint-primary rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 72px; height: 72px; background-color: rgba(34, 90, 64, 0.1);">
+                                    <i class="bi bi-file-earmark-pdf-fill fs-1 text-custom-primary"></i>
+                                </div>
+                                <h5 class="fw-bold mb-1">Aperçu PDF bloqué par le navigateur</h5>
+                                <p class="text-muted small mb-3">Votre navigateur ne permet pas l'intégration directe de ce fichier PDF.</p>
+                                <a href="{{ document.file.url }}" target="_blank" class="btn btn-custom-primary rounded-3 px-4 shadow-sm">
+                                    <i class="bi bi-box-arrow-up-right me-1"></i> Ouvrir le document
+                                </a>
+                            </div>
+                        </object>
+
+                    {% elif '.jpg' in ext or '.jpeg' in ext or '.png' in ext or '.webp' in ext or '.gif' in ext %}
+                        <div class="p-3 w-100 h-100 d-flex align-items-center justify-content-center">
+                            <img src="{{ document.file.url }}" alt="{{ document.title }}" class="img-fluid rounded-3 object-fit-contain shadow-sm" style="max-height: 580px;">
+                        </div>
+
+                    {% elif '.mp3' in ext or '.wav' in ext or '.ogg' in ext %}
+                        <div class="text-center p-5 my-auto">
+                            <div class="icon-shape rounded-circle mx-auto mb-4 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; background-color: rgba(34, 90, 64, 0.1);">
+                                <i class="bi bi-music-note-beats fs-1 text-custom-primary"></i>
+                            </div>
+                            <h5 class="fw-bold mb-3">Lecteur Audio</h5>
+                            <audio controls class="w-100 max-w-md mb-3 px-3">
+                                <source src="{{ document.file.url }}">
+                                Votre navigateur ne supporte pas la lecture audio.
+                            </audio>
+                        </div>
+
+                    {% else %}
+                        <div class="text-center p-5 my-auto">
+                            <div class="icon-shape rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 72px; height: 72px; background-color: rgba(34, 90, 64, 0.1);">
+                                <i class="bi bi-file-earmark-zip-fill fs-1 text-custom-primary"></i>
+                            </div>
+                            <h5 class="fw-bold mb-1">Aperçu non disponible pour ce format</h5>
+                            <p class="text-muted small mb-3">Ce type de fichier ne peut pas être prévisualisé directement.</p>
+                            <a href="{{ document.file.url }}" class="btn btn-custom-primary rounded-3 px-4 shadow-sm" download>
+                                <i class="bi bi-download me-1"></i> Télécharger pour consulter
+                            </a>
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+            </div>
+        </div>
+
+        <!-- Carte pour le Texte OCR extrait (PROBLÈME D'AFFICHAGE CORRIGÉ) -->
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden" style="background-color: var(--bg-card); border: 1px solid var(--border-color) !important;">
+            <div class="card-header bg-transparent border-bottom p-3 d-flex flex-wrap justify-content-between align-items-center gap-2" style="border-color: var(--border-color) !important;">
+                <h5 class="fw-bold mb-0 d-flex align-items-center gap-2">
+                    <i class="bi bi-file-earmark-text-fill text-custom-primary"></i>
+                    <span>Texte Extrait (Indexation OCR)</span>
+                </h5>
+                <div class="d-flex align-items-center gap-2 ms-auto">
+                    {% if document.ocr_text %}
+                        <button class="btn btn-sm btn-outline-secondary rounded-3 text-nowrap d-inline-flex align-items-center gap-1" onclick="copyOcrText()" title="Copier le texte">
+                            <i class="bi bi-clipboard"></i> <span>Copier</span>
+                        </button>
+                    {% endif %}
+                    
+                    {% if can_edit %}
+                        <!-- Correction du bouton cassé -->
+                        <button type="button" class="btn btn-sm btn-outline-primary rounded-3 text-nowrap d-inline-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#editOcrModal">
+                            <i class="bi bi-pencil-fill"></i> <span>Corriger OCR</span>
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-body p-4">
+                {% if document.ocr_text %}
+                    <div class="p-3 rounded-3 font-monospace small border text-wrap" id="ocrTextContainer" style="background-color: var(--bg-body); border-color: var(--border-color) !important; max-height: 300px; overflow-y: auto; white-space: pre-wrap;">{{ document.ocr_text }}</div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-search fs-3 text-muted d-block mb-2"></i>
+                        <p class="text-muted small mb-2">Aucun texte n'a encore été extrait de ce document.</p>
+                   {% if can_edit %}
+                <a href="{% url 'extract_ocr' document.id %}" class="btn btn-sm btn-custom-primary rounded-3 px-3 py-2 w-auto d-inline-flex align-items-center gap-2 shadow-sm">
+                    <i class="bi bi-cpu"></i>
+                    <span>Lancer l'extraction OCR</span>
+                </a>
+            {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Colonne Droite : Métadonnées -->
+    <div class="col-12 col-lg-4">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4" style="background-color: var(--bg-card); border: 1px solid var(--border-color) !important;">
+            <div class="card-header bg-transparent border-bottom p-3" style="border-color: var(--border-color) !important;">
+                <h5 class="fw-bold mb-0 d-flex align-items-center gap-2">
+                    <i class="bi bi-info-circle-fill text-custom-primary"></i>
+                    Métadonnées
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="mb-3">
+                    <span class="text-muted small d-block mb-1">Catégorie</span>
+                    {% if document.category %}
+                        <span class="badge badge-tint-danger rounded-pill px-3 py-2 fw-semibold">{{ document.category.name }}</span>
+                    {% else %}
+                        <span class="text-muted small">Non catégorisé</span>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <span class="text-muted small d-block mb-1">Auteur / Organisme</span>
+                    <p class="fw-semibold text-main mb-0"><i class="bi bi-person-fill text-custom-primary me-1"></i> {{ document.author|default:"Non renseigné" }}</p>
+                </div>
+
+                <div class="mb-3">
+                    <span class="text-muted small d-block mb-1">Archivé par</span>
+                    <p class="fw-semibold text-main mb-0"><i class="bi bi-shield-check text-custom-primary me-1"></i> {{ document.uploaded_by.get_full_name|default:document.uploaded_by.username|default:"Système" }}</p>
+                </div>
+
+                <div class="mb-3">
+                    <span class="text-muted small d-block mb-1">Date d'archivage</span>
+                    <p class="fw-semibold text-main mb-0"><i class="bi bi-calendar3 text-custom-primary me-1"></i> {{ document.uploaded_at|date:"d F Y à H:i" }}</p>
+                </div>
+
+                <hr class="my-3 opacity-25" style="border-color: var(--border-color);">
+
+                <div>
+                    <span class="text-muted small d-block mb-1">Description</span>
+                    <p class="text-muted small mb-0">{{ document.description|default:"Aucune description fournie pour cet archivage." }}</p>
+                </div>
+
+                {% if document.tags %}
+                    <hr class="my-3 opacity-25" style="border-color: var(--border-color);">
+                    <div>
+                        <span class="text-muted small d-block mb-2">Mots-clés associés</span>
+                        <div class="d-flex flex-wrap gap-1">
+                            {% for tag in document.tags.split %}
+                                <span class="badge bg-body-tertiary text-muted border rounded-2 font-monospace extra-small">#{{ tag }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if can_edit %}
+<!-- MODAL DE SUPPRESSION HARMONISÉ -->
+<div class="modal fade" id="deleteDocModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold text-danger d-flex align-items-center gap-2">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Supprimer le document
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-3">
+                Êtes-vous sûr de vouloir supprimer définitivement :
+                <strong class="d-block mt-2 text-body fs-6">"{{ document.title }}"</strong>
+                <span class="text-muted small d-block mt-1">Cette action est irréversible.</span>
+            </div>
+            <div class="modal-footer border-top-0 pt-0">
+                <button type="button" class="btn btn-light rounded-3 px-3" data-bs-dismiss="modal">Annuler</button>
+                <form action="{% url 'delete_document' document.id %}" method="POST" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger rounded-3 px-3">Supprimer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DE CORRECTION DU TEXTE OCR -->
+<div class="modal fade" id="editOcrModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <form action="{% url 'save_ocr' document.id %}" method="post">
+                {% csrf_token %}
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold text-custom-primary d-flex align-items-center gap-2">
+                        <i class="bi bi-pencil-square"></i> Modifier le texte OCR
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body py-3">
+                    <input type="hidden" name="title" value="{{ document.title }}">
+                    {% if document.category %}<input type="hidden" name="category" value="{{ document.category.id }}">{% endif %}
+                    <input type="hidden" name="author" value="{{ document.author|default:'' }}">
+                    <input type="hidden" name="description" value="{{ document.description|default:'' }}">
+                    <input type="hidden" name="tags" value="{{ document.tags|default:'' }}">
+
+                    <label for="ocr_text_modal" class="form-label small text-muted mb-2">Contenu textuel OCR (Modifiable) :</label>
+                    <textarea name="ocr_text" id="ocr_text_modal" class="form-control font-monospace rounded-3" rows="12" style="font-size: 0.875rem;">{{ document.ocr_text|default:'' }}</textarea>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-3 px-3" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-custom-primary rounded-3 px-4">Enregistrer les corrections</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+    function copyOcrText() {
+        const textContainer = document.getElementById('ocrTextContainer');
+        if (textContainer) {
+            navigator.clipboard.writeText(textContainer.textContent).then(() => {
+                alert('Texte OCR copié dans le presse-papier !');
+            });
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,173 @@
+:root {
+  --primary-color: #225A40;
+  --secondary-color: #D21E34;
+  --warning-color: #F6C400;
+  --primary-rgb: 34, 90, 64;
+  --secondary-rgb: 210, 30, 52;
+  --warning-rgb: 246, 196, 0;
+}
+
+body {
+  background: linear-gradient(135deg, #f8f9ff 0%, #e8efff 100%);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* En-tête : Dégradé pur basé sur votre vert */
+.page-header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, rgba(34, 90, 64, 0.85) 100%);
+  color: white;
+  padding: 2rem;
+  border-radius: 20px;
+  margin-bottom: 2rem;
+  box-shadow: 0 10px 30px rgba(var(--primary-rgb), 0.2);
+}
+
+.form-container {
+  background: white;
+  border-radius: 20px;
+  padding: 3rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+}
+
+.form-title {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #333;
+}
+
+.form-title i {
+  font-size: 3rem;
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+}
+
+.form-label,
+.form-floating > label {
+  color: #333;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  display: block;
+  font-size: 0.95rem;
+}
+
+.form-control,
+.form-select,
+textarea,
+input[type="text"],
+input[type="date"],
+input[type="number"],
+input[type="file"] {
+  border: 2px solid #e9ecef;
+  border-radius: 15px;
+  padding: 1rem 1.25rem;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: rgba(248, 249, 255, 0.5);
+  width: 100%;
+}
+
+.form-control:focus,
+.form-select:focus,
+textarea:focus,
+input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 0.2rem rgba(var(--primary-rgb), 0.15);
+  background: white;
+}
+
+#id_description {
+  min-height: 150px;
+  resize: vertical;
+}
+
+/* Zone d'upload */
+.file-upload-area {
+  border: 2px dashed var(--primary-color);
+  border-radius: 15px;
+  padding: 3rem 2rem;
+  text-align: center;
+  background: rgba(var(--primary-rgb), 0.04);
+  transition: all 0.3s ease;
+  margin-bottom: 2rem;
+}
+
+.file-upload-area:hover {
+  background: rgba(var(--primary-rgb), 0.08);
+  border-color: var(--primary-color);
+}
+
+.file-info {
+  background: rgba(var(--primary-rgb), 0.08);
+  border: 1px solid rgba(var(--primary-rgb), 0.2);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-top: 1rem;
+  display: none;
+}
+
+.file-info.show {
+  display: block;
+}
+
+/* Boutons */
+.btn-custom,
+.btn-primary-custom,
+.btn-secondary-custom {
+  border-radius: 25px;
+  padding: 0.75rem 2rem;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+/* Bouton principal (Vert) */
+.btn-primary-custom {
+  background: var(--primary-color);
+  color: white;
+}
+
+.btn-primary-custom:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(var(--primary-rgb), 0.3);
+  color: white;
+}
+
+/* Bouton secondaire (Jaune de la charte) */
+.btn-secondary-custom {
+  background: var(--warning-color);
+  color: var(--primary-color); /* Vert sur Jaune pour assurer la lisibilité */
+}
+
+.btn-secondary-custom:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(var(--warning-rgb), 0.4);
+  color: var(--primary-color);
+}
+
+/* Aperçu audio */
+.audio-preview {
+  background: rgba(var(--primary-rgb), 0.04);
+  border: 1px solid rgba(var(--primary-rgb), 0.2);
+  border-radius: 15px;
+  padding: 2rem;
+  margin-top: 2rem;
+  display: none;
+}
+
+.audio-preview.show {
+  display: block;
+}
+
+.preview-title {
+  color: var(--primary-color);
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.preview-content {
+  background: white;
+  border-radius: 10px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}

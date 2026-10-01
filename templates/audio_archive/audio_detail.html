@@ -1,0 +1,342 @@
+{% extends 'base.html' %}
+{% block title %}{{ audio.title }} | SI-Archives{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --theme-green: #225A40;
+        --theme-green-hover: #1a4632;
+        --theme-green-soft: rgba(34, 90, 64, 0.1);
+    }
+
+    .btn-custom-primary {
+        background-color: var(--theme-green) !important;
+        color: #ffffff !important;
+        border: none !important;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .btn-custom-primary:hover {
+        background-color: var(--theme-green-hover) !important;
+        color: #ffffff !important;
+        transform: translateY(-1px);
+    }
+
+    .bg-soft-green {
+        background-color: var(--theme-green-soft) !important;
+        color: var(--theme-green) !important;
+        font-weight: 600;
+    }
+
+    .text-theme-green {
+        color: var(--theme-green) !important;
+    }
+
+    .audio-player-card {
+        background: linear-gradient(135deg, #1e3c2f 0%, #225A40 100%);
+        color: #ffffff;
+    }
+
+    .custom-progress {
+        height: 6px;
+        cursor: pointer;
+        background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .custom-progress-bar {
+        background-color: #F6C400;
+    }
+</style>
+
+<!-- Barre de navigation / Fil d'Ariane & Actions -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div>
+        {% if user.is_staff or user.is_superuser %}
+            <a href="{% url 'audio_management' %}" class="btn btn-sm btn-outline-secondary rounded-3 mb-2 d-inline-flex align-items-center gap-1">
+                <i class="bi bi-arrow-left"></i> Retour
+            </a>
+        {% endif %}
+        
+        <div class="d-flex align-items-center gap-2">
+            <h1 class="h3 fw-bold mb-0">{{ audio.title }}</h1>
+            {% if audio.is_featured %}
+                <span class="badge rounded-pill text-dark" style="background-color: #F6C400;" title="Archive mise en vedette">
+                    <i class="bi bi-star-fill me-1"></i> Vedette
+                </span>
+            {% endif %}
+        </div>
+        {% if audio.subtitle %}
+            <p class="text-muted mb-0 fs-6 mt-1">{{ audio.subtitle }}</p>
+        {% endif %}
+    </div>
+
+    <!-- Actions rapides -->
+    <div class="d-flex align-items-center gap-2">
+        <a href="{% url 'download_audio' audio.id %}" class="btn text-white rounded-3 d-inline-flex align-items-center gap-1" style="background-color: #225A40;" title="Télécharger le fichier">
+            <i class="bi bi-download"></i>
+        </a>
+
+        {% if user.is_staff or user.is_superuser %}
+            <a href="{% url 'edit_audio' audio.id %}" class="btn btn-outline-primary rounded-3 d-inline-flex align-items-center gap-1">
+                <i class="bi bi-pencil-square"></i> <span class="d-none d-sm-inline">Modifier</span>
+            </a>
+            <button type="button" class="btn btn-outline-danger rounded-3 d-inline-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#deleteAudioModal">
+                <i class="bi bi-trash-fill"></i> <span class="d-none d-sm-inline">Supprimer</span>
+            </button>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- COLONNE GAUCHE : Lecteur Audio & Description -->
+    <div class="col-12 col-lg-7 col-xl-8">
+        
+        <!-- CARTE LECTEUR AUDIO PRO -->
+        <div class="card border-0 shadow-sm rounded-4 audio-player-card p-4 mb-4">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="rounded-circle bg-white text-theme-green p-3 d-flex align-items-center justify-content-center shadow-sm" style="width: 56px; height: 56px;">
+                    <i class="bi bi-disc-fill fs-3"></i>
+                </div>
+                <div>
+                    <h5 class="mb-0 text-white fw-bold">{{ audio.title }}</h5>
+                    <small class="text-white-50">{{ audio.producer|default:"Producteur non renseigné" }}</small>
+                </div>
+            </div>
+
+            <audio id="mainAudio" src="{% url 'stream_audio' audio.id %}" preload="metadata"></audio>
+
+            <div class="mt-2">
+                <div class="progress custom-progress rounded-pill mb-2" id="progressContainer">
+                    <div class="progress-bar custom-progress-bar rounded-pill" id="progressBar" role="progressbar" style="width: 0%"></div>
+                </div>
+
+                <div class="d-flex justify-content-between text-white-50 small mb-3">
+                    <span id="currentTime">00:00</span>
+                    <span id="totalDuration">{{ audio.duration|default:"--:--" }}</span>
+                </div>
+
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-3">
+                        <button type="button" class="btn btn-light rounded-circle p-0 d-flex align-items-center justify-content-center" id="playPauseBtn" style="width: 48px; height: 48px;">
+                            <i class="bi bi-play-fill fs-3 text-dark ms-1" id="playIcon"></i>
+                        </button>
+                        <button type="button" class="btn btn-link text-white-50 text-decoration-none p-0" id="muteBtn">
+                            <i class="bi bi-volume-up-fill fs-5" id="volumeIcon"></i>
+                        </button>
+                    </div>
+
+                    <select class="form-select form-select-sm bg-transparent text-white border-white-50 rounded-3" id="speedSelect" style="width: auto;">
+                        <option value="0.75" class="text-dark">0.75x</option>
+                        <option value="1.0" class="text-dark" selected>1.0x</option>
+                        <option value="1.25" class="text-dark">1.25x</option>
+                        <option value="1.5" class="text-dark">1.5x</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- DESCRIPTION ET DETAILS -->
+        <div class="card border-0 shadow-sm rounded-4 bg-body p-4">
+            <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                <i class="bi bi-file-text text-theme-green"></i> Description & Résumé
+            </h5>
+            <p class="text-secondary leading-relaxed mb-0">
+                {% if audio.description %}
+                    {{ audio.description|linebreaks }}
+                {% else %}
+                    <span class="text-muted italic">Aucune description détaillée n'a été fournie pour cette archive sonore.</span>
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <!-- COLONNE DROITE : Fiche d'informations / Métadonnées complètes -->
+    <div class="col-12 col-lg-5 col-xl-4">
+        <div class="card border-0 shadow-sm rounded-4 bg-body p-4">
+            <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                <i class="bi bi-info-circle text-theme-green"></i> Fiche technique
+            </h5>
+
+            <ul class="list-group list-group-flush small">
+                <!-- Catégorie -->
+                <li class="list-group-item bg-transparent px-0 d-flex justify-content-between align-items-center py-2">
+                    <span class="text-muted"><i class="bi bi-folder me-2"></i>Catégorie</span>
+                    {% if audio.category %}
+                        <span class="badge bg-soft-green rounded-pill px-3 py-1">{{ audio.category.name }}</span>
+                    {% else %}
+                        <span class="text-muted">Non classé</span>
+                    {% endif %}
+                </li>
+
+                <!-- Langue -->
+                <li class="list-group-item bg-transparent px-0 d-flex justify-content-between align-items-center py-2">
+                    <span class="text-muted"><i class="bi bi-translate me-2"></i>Langue</span>
+                    <span class="fw-semibold text-dark">{{ audio.language.name|default:audio.language|default:"Non spécifiée" }}</span>
+                </li>
+
+                <!-- N° de Bande -->
+                <li class="list-group-item bg-transparent px-0 d-flex justify-content-between align-items-center py-2">
+                    <span class="text-muted"><i class="bi bi-cassette me-2"></i>N° de Bande</span>
+                    <span class="fw-semibold text-dark">{{ audio.band_number|default:"Non renseigné" }}</span>
+                </li>
+
+                <!-- N° d'Enregistrement -->
+                <li class="list-group-item bg-transparent px-0 d-flex justify-content-between align-items-center py-2">
+                    <span class="text-muted"><i class="bi bi-hash me-2"></i>N° d'Enregistrement</span>
+                    <span class="fw-semibold text-dark">{{ audio.recording_number|default:"Non renseigné" }}</span>
+                </li>
+
+                <!-- Producteur -->
+                <li class="list-group-item bg-transparent px-0 d-flex justify-content-between align-items-center py-2">
+                    <span class="text-muted"><i class="bi bi-person me-2"></i>Producteur / Présentateur</span>
+                    <span class="fw-semibold text-dark">{{ audio.producer|default:"Non spécifié" }}</span>
+                </li>
+
+                <!-- Vitesse / Format -->
+                <li class="list-group-item bg-transparent px-0 d-flex justify-content-between align-items-center py-2">
+                    <span class="text-muted"><i class="bi bi-speedometer2 me-2"></i>Vitesse / Format</span>
+                    <span class="fw-semibold text-dark">{{ audio.speed|default:"Standard" }}</span>
+                </li>
+
+                <!-- Durée -->
+                <li class="list-group-item bg-transparent px-0 d-flex justify-content-between align-items-center py-2">
+                    <span class="text-muted"><i class="bi bi-clock me-2"></i>Durée</span>
+                    <span class="fw-semibold text-dark">{{ audio.duration|default:"Inconnue" }}</span>
+                </li>
+
+                <!-- Date d'enregistrement -->
+                <li class="list-group-item bg-transparent px-0 d-flex justify-content-between align-items-center py-2">
+                    <span class="text-muted"><i class="bi bi-mic me-2"></i>Enregistré le</span>
+                    <span class="fw-semibold text-dark">{{ audio.recording_date|date:"d/m/Y"|default:"Inconnue" }}</span>
+                </li>
+
+                <!-- Date de diffusion -->
+                <li class="list-group-item bg-transparent px-0 d-flex justify-content-between align-items-center py-2">
+                    <span class="text-muted"><i class="bi bi-broadcast me-2"></i>Diffusé le</span>
+                    <span class="fw-semibold text-dark">{{ audio.broadcast_date|date:"d/m/Y"|default:"Inconnue" }}</span>
+                </li>
+
+                <!-- Écoutes -->
+                <li class="list-group-item bg-transparent px-0 d-flex justify-content-between align-items-center py-2">
+                    <span class="text-muted"><i class="bi bi-headphones me-2"></i>Nombre d'écoutes</span>
+                    <span class="fw-semibold text-dark">{{ audio.play_count|default:0 }}</span>
+                </li>
+
+                <!-- Ajouté par -->
+                <li class="list-group-item bg-transparent px-0 d-flex justify-content-between align-items-center py-2">
+                    <span class="text-muted"><i class="bi bi-person-check me-2"></i>Ajouté par</span>
+                    <span class="fw-semibold text-dark">{{ audio.uploaded_by.get_full_name|default:audio.uploaded_by.username|default:"Système" }}</span>
+                </li>
+
+                <!-- Date de téléversement -->
+                <li class="list-group-item bg-transparent px-0 d-flex justify-content-between align-items-center py-2">
+                    <span class="text-muted"><i class="bi bi-cloud-upload me-2"></i>Ajouté le</span>
+                    <span class="fw-semibold text-dark">{{ audio.uploaded_at|date:"d/m/Y H:i" }}</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL SUPPRESSION -->
+{% if user.is_staff or user.is_superuser %}
+<div class="modal fade text-start" id="deleteAudioModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold text-danger d-flex align-items-center gap-2">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Suppression de l'archive
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body py-3">
+                Êtes-vous sûr de vouloir supprimer définitivement l'enregistrement sonore :
+                <strong class="d-block mt-2 text-body fs-6">"{{ audio.title }}"</strong>
+                <span class="text-muted small d-block mt-1">Cette action est irréversible.</span>
+            </div>
+            <div class="modal-footer border-top-0 pt-0">
+                <button type="button" class="btn btn-light rounded-3 px-3" data-bs-dismiss="modal">Annuler</button>
+                <form action="{% url 'delete_audio' audio.id %}" method="POST" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger rounded-3 px-3">Confirmer la suppression</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const audio = document.getElementById('mainAudio');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const playIcon = document.getElementById('playIcon');
+        const progressBar = document.getElementById('progressBar');
+        const progressContainer = document.getElementById('progressContainer');
+        const currentTimeEl = document.getElementById('currentTime');
+        const totalDurationEl = document.getElementById('totalDuration');
+        const muteBtn = document.getElementById('muteBtn');
+        const volumeIcon = document.getElementById('volumeIcon');
+        const speedSelect = document.getElementById('speedSelect');
+
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return "00:00";
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        audio.addEventListener('loadedmetadata', function () {
+            if (audio.duration && !isNaN(audio.duration)) {
+                totalDurationEl.textContent = formatTime(audio.duration);
+            }
+        });
+
+        playPauseBtn.addEventListener('click', function () {
+            if (audio.paused) {
+                audio.play();
+                playIcon.classList.remove('bi-play-fill', 'ms-1');
+                playIcon.classList.add('bi-pause-fill');
+            } else {
+                audio.pause();
+                playIcon.classList.remove('bi-pause-fill');
+                playIcon.classList.add('bi-play-fill', 'ms-1');
+            }
+        });
+
+        audio.addEventListener('timeupdate', function () {
+            const progressPercent = (audio.currentTime / audio.duration) * 100;
+            progressBar.style.width = `${progressPercent}%`;
+            currentTimeEl.textContent = formatTime(audio.currentTime);
+        });
+
+        progressContainer.addEventListener('click', function (e) {
+            const width = this.clientWidth;
+            const clickX = e.offsetX;
+            const duration = audio.duration;
+            audio.currentTime = (clickX / width) * duration;
+        });
+
+        muteBtn.addEventListener('click', function () {
+            audio.muted = !audio.muted;
+            if (audio.muted) {
+                volumeIcon.classList.remove('bi-volume-up-fill');
+                volumeIcon.classList.add('bi-volume-mute-fill');
+            } else {
+                volumeIcon.classList.remove('bi-volume-mute-fill');
+                volumeIcon.classList.add('bi-volume-up-fill');
+            }
+        });
+
+        speedSelect.addEventListener('change', function () {
+            audio.playbackRate = parseFloat(this.value);
+        });
+
+        audio.addEventListener('ended', function () {
+            playIcon.classList.remove('bi-pause-fill');
+            playIcon.classList.add('bi-play-fill', 'ms-1');
+            progressBar.style.width = '0%';
+        });
+    });
+</script>
+{% endblock %}

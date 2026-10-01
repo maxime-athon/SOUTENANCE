@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block title %}Modifier catégorie {{ type_label }} | Archive Hub{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --theme-green: #225A40;
+    }
+    .btn-custom-primary {
+        background-color: var(--theme-green) !important;
+        color: #ffffff !important;
+        border: none !important;
+        transition: all 0.25s ease;
+    }
+    .btn-custom-primary:hover {
+        background-color: #1a4632 !important;
+        color: #ffffff !important;
+    }
+</style>
+
+<div class="row justify-content-center my-4">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden" style="background-color: var(--bg-card); border: 1px solid var(--border-color) !important;">
+            
+            <div class="card-header bg-transparent border-bottom p-4" style="border-color: var(--border-color) !important;">
+                <h4 class="fw-bold mb-1 d-flex align-items-center gap-2">
+                    <i class="bi bi-pencil-square text-success"></i>
+                    Modifier la catégorie {{ type_label }}
+                </h4>
+                <p class="text-muted small mb-0">Mise à jour de la rubrique : <strong>{{ category.name }}</strong></p>
+            </div>
+
+            <div class="card-body p-4">
+                <form method="post" action="" id="editCategoryForm">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger rounded-3 mb-3">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label fw-semibold small text-muted">
+                            Nom de la catégorie
+                        </label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                            <div class="text-danger small mt-1">{{ form.name.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="{{ form.description.id_for_label }}" class="form-label fw-semibold small text-muted">
+                            Description / Détails
+                        </label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="text-danger small mt-1">{{ form.description.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-end gap-2 pt-2 border-top" style="border-color: var(--border-color) !important;">
+                        <a href="{% url 'global_manage_categories' %}" class="btn btn-light rounded-3 px-4">
+                            Annuler
+                        </a>
+                        <button class="btn btn-custom-primary rounded-3 px-4 d-inline-flex align-items-center gap-2" type="submit">
+                            <i class="bi bi-check-lg"></i>
+                            <span>Enregistrer</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const inputs = document.querySelectorAll('#editCategoryForm input, #editCategoryForm textarea');
+        inputs.forEach(input => {
+            input.classList.add('form-control', 'rounded-3');
+            if(input.tagName === 'TEXTAREA') {
+                input.setAttribute('rows', '3');
+            }
+        });
+    });
+</script>
+{% endblock %}

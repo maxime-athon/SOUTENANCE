@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+{% block title %}Gestion Centralisée des Catégories | Archive Hub{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --theme-green: #225A40;
+        --theme-red: #D21E34;
+        --theme-yellow: #F6C400;
+    }
+
+    .btn-custom-primary {
+        background-color: var(--theme-green) !important;
+        color: #ffffff !important;
+        border: none !important;
+        transition: all 0.25s ease;
+    }
+    .btn-custom-primary:hover {
+        background-color: #1a4632 !important;
+        color: #ffffff !important;
+    }
+
+    .text-theme-green { color: var(--theme-green) !important; }
+    .text-theme-red { color: var(--theme-red) !important; }
+
+    .badge-theme-green {
+        background-color: rgba(34, 90, 64, 0.12) !important;
+        color: var(--theme-green) !important;
+        border: 1px solid rgba(34, 90, 64, 0.2) !important;
+    }
+    .badge-theme-yellow {
+        background-color: rgba(246, 196, 0, 0.15) !important;
+        color: #8a6d00 !important;
+        border: 1px solid rgba(246, 196, 0, 0.3) !important;
+    }
+
+    .category-card {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color) !important;
+    }
+
+    .form-box {
+        background-color: var(--bg-body);
+        border: 1px solid var(--border-color);
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">Gestion Centralisée des Catégories</h2>
+        <p class="text-muted small mb-0">Organisez les rubriques d'archivage pour vos documents et contenus audio.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- BLOC CATÉGORIES DOCUMENTS -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm rounded-4 h-100 category-card">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold mb-0 text-theme-green d-flex align-items-center gap-2">
+                        <i class="bi bi-file-earmark-text-fill"></i> Documents
+                    </h4>
+                    <span class="badge badge-theme-green rounded-pill px-3 py-2 fw-semibold">
+                        {{ doc_categories|length }} catégorie{% if doc_categories|length > 1 %}s{% endif %}
+                    </span>
+                </div>
+
+                <!-- Formulaire Ajout Document -->
+                <form method="post" action="{% url 'add_doc_category' %}" class="mb-4 p-3 rounded-3 form-box">
+                    {% csrf_token %}
+                    <h6 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                        <i class="bi bi-plus-circle-fill text-theme-green"></i> Nouvelle catégorie document
+                    </h6>
+                    <div class="mb-2">
+                        <label class="form-label fw-semibold small text-muted mb-1">{{ doc_form.name.label }}</label>
+                        {{ doc_form.name }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small text-muted mb-1">{{ doc_form.description.label }}</label>
+                        {{ doc_form.description }}
+                    </div>
+                    <button class="btn btn-custom-primary btn-sm rounded-3 w-100 py-2 d-flex align-items-center justify-content-center gap-2" type="submit">
+                        <i class="bi bi-check-lg"></i>
+                        <span>Créer la catégorie Document</span>
+                    </button>
+                </form>
+
+                <!-- Liste Catégories Document -->
+                {% if doc_categories %}
+                    <div class="list-group list-group-flush">
+                        {% for category in doc_categories %}
+                            <div class="list-group-item bg-transparent px-0 py-3 border-bottom d-flex align-items-center justify-content-between gap-3" style="border-color: var(--border-color) !important;">
+                                <div class="overflow-hidden">
+                                    <h6 class="mb-1 fw-bold text-truncate">{{ category.name }}</h6>
+                                    <p class="text-muted small mb-0 text-truncate">{{ category.description|default:"Aucune description." }}</p>
+                                </div>
+                                <div class="d-flex gap-2 flex-shrink-0">
+                                    <a class="btn btn-sm btn-outline-secondary rounded-3" href="{% url 'doc_edit_category' category.id %}" title="Modifier">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <!-- Bouton declencheur Modal Suppression -->
+                                    <button type="button" class="btn btn-sm btn-outline-danger rounded-3" data-bs-toggle="modal" data-bs-target="#deleteDocModal{{ category.id }}" title="Supprimer">
+                                        <i class="bi bi-trash3"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- MODAL SUPPRESSION ELEGANTE DOCUMENT -->
+                            <div class="modal fade" id="deleteDocModal{{ category.id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content rounded-4 border-0 shadow">
+                                        <div class="modal-body text-center p-4">
+                                            <div class="icon-shape rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; background-color: rgba(210, 30, 52, 0.1);">
+                                                <i class="bi bi-exclamation-triangle-fill fs-2 text-theme-red"></i>
+                                            </div>
+                                            <h5 class="fw-bold mb-2">Confirmer la suppression</h5>
+                                            <p class="text-muted small mb-4">Êtes-vous sûr de vouloir supprimer la catégorie document <strong class="text-dark">{{ category.name }}</strong> ? Cette action est irréversible.</p>
+                                            
+                                            <form method="post" action="{% url 'doc_delete_category' category.id %}">
+                                                {% csrf_token %}
+                                                <div class="d-flex justify-content-center gap-2">
+                                                    <button type="button" class="btn btn-light rounded-3 px-4" data-bs-dismiss="modal">Annuler</button>
+                                                    <button type="submit" class="btn btn-danger rounded-3 px-4" style="background-color: var(--theme-red); border: none;">Oui, supprimer</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-folder-x fs-3 d-block mb-1"></i>
+                        <span class="small">Aucune catégorie document enregistrée.</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- BLOC CATÉGORIES AUDIOS -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm rounded-4 h-100 category-card">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold mb-0 text-theme-green d-flex align-items-center gap-2">
+                        <i class="bi bi-music-note-beamer"></i> Audios
+                    </h4>
+                    <span class="badge badge-theme-yellow rounded-pill px-3 py-2 fw-semibold">
+                        {{ audio_categories|length }} catégorie{% if audio_categories|length > 1 %}s{% endif %}
+                    </span>
+                </div>
+
+                <!-- Formulaire Ajout Audio -->
+                <form method="post" action="{% url 'add_audio_category' %}" class="mb-4 p-3 rounded-3 form-box">
+                    {% csrf_token %}
+                    <h6 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                        <i class="bi bi-plus-circle-fill text-theme-green"></i> Nouvelle catégorie audio
+                    </h6>
+                    <div class="mb-2">
+                        <label class="form-label fw-semibold small text-muted mb-1">{{ audio_form.name.label }}</label>
+                        {{ audio_form.name }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small text-muted mb-1">{{ audio_form.description.label }}</label>
+                        {{ audio_form.description }}
+                    </div>
+                    <button class="btn btn-custom-primary btn-sm rounded-3 w-100 py-2 d-flex align-items-center justify-content-center gap-2" type="submit">
+                        <i class="bi bi-check-lg"></i>
+                        <span>Créer la catégorie Audio</span>
+                    </button>
+                </form>
+
+                <!-- Liste Catégories Audio -->
+                {% if audio_categories %}
+                    <div class="list-group list-group-flush">
+                        {% for category in audio_categories %}
+                            <div class="list-group-item bg-transparent px-0 py-3 border-bottom d-flex align-items-center justify-content-between gap-3" style="border-color: var(--border-color) !important;">
+                                <div class="overflow-hidden">
+                                    <h6 class="mb-1 fw-bold text-truncate">{{ category.name }}</h6>
+                                    <p class="text-muted small mb-0 text-truncate">{{ category.description|default:"Aucune description." }}</p>
+                                </div>
+                                <div class="d-flex gap-2 flex-shrink-0">
+                                    <a class="btn btn-sm btn-outline-secondary rounded-3" href="{% url 'audio_edit_category' category.id %}" title="Modifier">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <!-- Bouton declencheur Modal Suppression -->
+                                    <button type="button" class="btn btn-sm btn-outline-danger rounded-3" data-bs-toggle="modal" data-bs-target="#deleteAudioModal{{ category.id }}" title="Supprimer">
+                                        <i class="bi bi-trash3"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- MODAL SUPPRESSION ELEGANTE AUDIO -->
+                            <div class="modal fade" id="deleteAudioModal{{ category.id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content rounded-4 border-0 shadow">
+                                        <div class="modal-body text-center p-4">
+                                            <div class="icon-shape rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; background-color: rgba(210, 30, 52, 0.1);">
+                                                <i class="bi bi-exclamation-triangle-fill fs-2 text-theme-red"></i>
+                                            </div>
+                                            <h5 class="fw-bold mb-2">Confirmer la suppression</h5>
+                                            <p class="text-muted small mb-4">Êtes-vous sûr de vouloir supprimer la catégorie audio <strong class="text-dark">{{ category.name }}</strong> ? Cette action est irréversible.</p>
+                                            
+                                            <form method="post" action="{% url 'audio_delete_category' category.id %}">
+                                                {% csrf_token %}
+                                                <div class="d-flex justify-content-center gap-2">
+                                                    <button type="button" class="btn btn-light rounded-3 px-4" data-bs-dismiss="modal">Annuler</button>
+                                                    <button type="submit" class="btn btn-danger rounded-3 px-4" style="background-color: var(--theme-red); border: none;">Oui, supprimer</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-folder-x fs-3 d-block mb-1"></i>
+                        <span class="small">Aucune catégorie audio enregistrée.</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Style automatique des champs de formulaires Django
+    document.addEventListener("DOMContentLoaded", function() {
+        const inputs = document.querySelectorAll('.form-box input, .form-box textarea');
+        inputs.forEach(input => {
+            input.classList.add('form-control', 'rounded-3');
+            if(input.tagName === 'TEXTAREA') {
+                input.setAttribute('rows', '2');
+            }
+        });
+    });
+</script>
+{% endblock %}

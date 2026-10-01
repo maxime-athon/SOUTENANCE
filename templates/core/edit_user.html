@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% block title %}Modifier utilisateur | SI-Archives Radio Kara{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --theme-green: #225A40;
+        --theme-green-hover: #18422e;
+        --theme-red: #D21E34;
+        --theme-yellow: #F6C400;
+    }
+
+    .btn-custom-primary {
+        background-color: var(--theme-green) !important;
+        color: #ffffff !important;
+        border: none !important;
+        transition: all 0.25s ease;
+    }
+    .btn-custom-primary:hover {
+        background-color: var(--theme-green-hover) !important;
+        color: #ffffff !important;
+    }
+
+    .text-theme-green { color: var(--theme-green) !important; }
+    .text-theme-red { color: var(--theme-red) !important; }
+
+    .custom-card {
+        background-color: var(--bg-card, #ffffff);
+        border: 1px solid var(--border-color, #dbe4df) !important;
+        border-top: 4px solid var(--theme-green) !important;
+    }
+</style>
+
+<div class="row justify-content-center">
+    <div class="col-lg-9 col-xl-8">
+        
+        <div class="card border-0 shadow-sm rounded-4 custom-card">
+            <div class="card-header bg-transparent border-bottom p-4 d-flex justify-content-between align-items-center" style="border-color: var(--border-color, #dbe4df) !important;">
+                <div>
+                    <h3 class="fw-bold mb-1 text-theme-green d-flex align-items-center gap-2">
+                        <i class="bi bi-pencil-square"></i> Modifier l'utilisateur
+                    </h3>
+                    <p class="text-muted small mb-0">Édition des accès et informations de <strong>@{{ user.username }}</strong></p>
+                </div>
+                <span class="badge rounded-pill px-3 py-2 fw-semibold" style="background-color: rgba(34, 90, 64, 0.12); color: var(--theme-green);">
+                    ID: {{ user.id }}
+                </span>
+            </div>
+
+            <div class="card-body p-4">
+                <form method="post" id="editUserForm" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger small" role="alert">{{ form.non_field_errors }}</div>
+                    {% endif %}
+                    
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.username.id_for_label }}" class="form-label fw-semibold small text-muted">
+                                {{ form.username.label_tag }} <span class="text-theme-red">*</span>
+                            </label>
+                            {{ form.username }}
+                            {% for error in form.username.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.email.id_for_label }}" class="form-label fw-semibold small text-muted">
+                                {{ form.email.label_tag }} <span class="text-theme-red">*</span>
+                            </label>
+                            {{ form.email }}
+                            {% for error in form.email.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.first_name.id_for_label }}" class="form-label fw-semibold small text-muted">
+                                {{ form.first_name.label_tag }}
+                            </label>
+                            {{ form.first_name }}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.last_name.id_for_label }}" class="form-label fw-semibold small text-muted">
+                                {{ form.last_name.label_tag }}
+                            </label>
+                            {{ form.last_name }}
+                        </div>
+                    </div>
+
+                    <div class="p-3 mb-3 rounded-3 bg-light border">
+                        <label for="{{ form.password.id_for_label }}" class="form-label fw-semibold small text-muted d-block">
+                            Nouveau mot de passe <span class="text-muted fw-normal">(facultatif)</span>
+                        </label>
+                        <div class="input-group">
+                            {{ form.password }}
+                            <button type="button" class="btn btn-outline-secondary password-toggle" data-password-input="{{ form.password.id_for_label }}" aria-label="Afficher le mot de passe" title="Afficher le mot de passe">
+                                <i class="bi bi-eye" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                        {% if form.password.help_text %}
+                            <div class="form-text text-muted small mt-1">
+                                <i class="bi bi-info-circle me-1"></i> {{ form.password.help_text }}
+                            </div>
+                        {% endif %}
+                        {% for error in form.password.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="p-3 rounded-3 border bg-body">
+                                <label class="form-label fw-semibold small" for="{{ form.role.id_for_label }}">Rôle</label>
+                                {{ form.role }}
+                                {% for error in form.role.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 rounded-3 border bg-body">
+                                <div class="form-check form-switch mb-0">
+                                    {{ form.is_active }}
+                                    <label class="form-check-label fw-semibold small" for="{{ form.is_active.id_for_label }}">{{ form.is_active.label }}</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4" style="color: var(--border-color, #dbe4df);">
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{% url 'manage_users' %}" class="btn btn-outline-secondary rounded-3 px-4 d-inline-flex align-items-center gap-2">
+                            <i class="bi bi-x-circle"></i>
+                            <span>Annuler</span>
+                        </a>
+                        <button class="btn btn-custom-primary rounded-3 px-4 py-2 d-inline-flex align-items-center gap-2 shadow-sm" type="submit">
+                            <i class="bi bi-check-lg"></i>
+                            <span>Enregistrer les modifications</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const form = document.getElementById('editUserForm');
+        const inputs = form.querySelectorAll('input:not([type="checkbox"]), select');
+        
+        inputs.forEach(input => {
+            input.classList.add('form-control', 'rounded-3');
+        });
+        const passwordField = document.getElementById('{{ form.password.id_for_label }}');
+        if (passwordField) {
+            passwordField.classList.remove('rounded-3');
+            passwordField.classList.add('rounded-start-3');
+        }
+
+        // Activation de la vérification obligatoire HTML5
+        const requiredFields = ['username'];
+        requiredFields.forEach(name => {
+            const field = form.querySelector(`[name="${name}"]`);
+            if (field) field.setAttribute('required', 'required');
+        });
+
+        document.querySelectorAll('.password-toggle').forEach(button => {
+            button.addEventListener('click', () => {
+                const input = document.getElementById(button.dataset.passwordInput);
+                const visible = input.type === 'text';
+                input.type = visible ? 'password' : 'text';
+                button.setAttribute('aria-label', visible ? 'Afficher le mot de passe' : 'Masquer le mot de passe');
+                button.title = visible ? 'Afficher le mot de passe' : 'Masquer le mot de passe';
+                button.querySelector('i').className = visible ? 'bi bi-eye' : 'bi bi-eye-slash';
+            });
+        });
+    });
+</script>
+{% endblock %}

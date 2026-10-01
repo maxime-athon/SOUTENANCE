@@ -1,0 +1,444 @@
+{% extends 'base.html' %}
+{% block title %}Gestion audio | SI-Archives{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --theme-green: #225A40;
+        --theme-green-hover: #1a4632;
+        --theme-green-soft: rgba(34, 90, 64, 0.1);
+        --theme-red: #D21E34;
+        --theme-yellow: #F6C400;
+    }
+
+    /* Bouton personnalisé vert */
+    .btn-custom-primary {
+        background-color: var(--theme-green) !important;
+        color: #ffffff !important;
+        border: none !important;
+        transition: all 0.25s ease;
+    }
+
+    .btn-custom-primary:hover,
+    .btn-custom-primary:focus {
+        background-color: var(--theme-green-hover) !important;
+        color: #ffffff !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(34, 90, 64, 0.25) !important;
+    }
+
+    /* Badges doux pour la charte */
+    .bg-soft-green {
+        background-color: var(--theme-green-soft) !important;
+        color: var(--theme-green) !important;
+        font-weight: 600;
+    }
+
+    .text-theme-green {
+        color: var(--theme-green) !important;
+    }
+
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .hover-shadow:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.08) !important;
+    }
+
+    .icon-tint-primary {
+        background-color: var(--theme-green-soft);
+        color: var(--theme-green);
+    }
+
+    /* En-tête de tableau stylisé */
+    .table-custom-header th {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #6c757d;
+        border-bottom-width: 1px;
+    }
+
+    .category-filter-btn {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.category-filter-btn.active-filter {
+    background-color: #F6C400 !important;
+    color: #000000 !important;
+    font-weight: bold;
+}
+
+.category-filter-btn.inactive-filter {
+    background-color: rgba(34, 90, 64, 0.1) !important;
+    color: #225A40 !important;
+}
+
+.category-filter-btn:hover {
+    transform: translateY(-1px);
+    opacity: 0.9;
+}
+</style>
+
+<!-- En-tête de page -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div>
+        <h1 class="fw-bold mb-1">Archives audio</h1>
+        <p class="text-muted mb-0">Exploration et gestion du fonds sonore radio.</p>
+    </div>
+    <a class="btn btn-custom-primary rounded-3 d-inline-flex align-items-center gap-2 shadow-sm" href="{% url 'add_audio' %}">
+        <i class="bi bi-plus-circle-fill"></i>
+        <span>Ajouter un audio</span>
+    </a>
+</div>
+
+<!-- Barre d'outils, Recherche et Filtrage par Catégorie -->
+<div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden" style="background-color: var(--bg-card, #fff); border: 1px solid var(--border-color, #e9ecef) !important;">
+    <div class="card-body p-3 p-md-4">
+        
+        <!-- Ligne Recherche + Mode d'affichage -->
+        <form method="get" action="{% url 'audio_management' %}" class="row g-3 align-items-center mb-3">
+            <div class="col-12 col-md-7 col-lg-8">
+                <div class="input-group">
+                    <span class="input-group-text border-end-0 text-muted" style="background-color: var(--bg-body, #f8f9fa);">
+                        <i class="bi bi-search text-theme-green"></i>
+                    </span>
+                    <input type="text" id="audioSearchInput" name="q" value="{{ request.GET.q|default:'' }}" class="form-control border-start-0 ps-0" placeholder="Rechercher une archive par titre, sous-titre, producteur...">
+                </div>
+            </div>
+            
+            <div class="col-12 col-md-5 col-lg-4 d-flex align-items-center justify-content-md-end gap-2">
+                {% if request.GET.category or request.GET.q %}
+                    <a href="{% url 'audio_management' %}" class="btn btn-outline-secondary btn-sm rounded-3 d-inline-flex align-items-center gap-1">
+                        <i class="bi bi-x-circle"></i> Réinitialiser
+                    </a>
+                {% endif %}
+
+                <!-- Basculeur Vue Grille / Vue Liste -->
+                <div class="btn-group rounded-3 shadow-sm" role="group" aria-label="Mode d'affichage">
+                    <button type="button" class="btn btn-outline-primary btn-sm active" id="btn-view-grid" onclick="switchView('grid')" title="Vue en grille">
+                        <i class="bi bi-grid-3x3-gap-fill"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="btn-view-list" onclick="switchView('list')" title="Vue en liste">
+                        <i class="bi bi-list-ul"></i>
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <!-- Filtres par catégories -->
+    <div class="d-flex align-items-center gap-2 overflow-x-auto pb-1" style="white-space: nowrap;">
+    <span class="small fw-bold text-muted me-2"><i class="bi bi-funnel-fill text-theme-green"></i> Catégories :</span>
+    
+    <!-- Bouton Tous -->
+    <button type="button" class="badge border-0 rounded-pill px-3 py-2 category-filter-btn active-filter" data-category-id="all">
+        Toutes ({{ audio_files|length }})
+    </button>
+
+    <!-- Boutons dynamiques -->
+    {% for cat in categories %}
+        <button type="button" class="badge border-0 rounded-pill px-3 py-2 category-filter-btn inactive-filter" data-category-id="{{ cat.id }}">
+            {{ cat.name }}
+        </button>
+    {% endfor %}
+</div>
+
+    </div>
+</div>
+
+<!-- SECTION 1 : Vue en Grille (Cards) -->
+<div id="grid-view" class="row g-4">
+    {% if audio_files %}
+        {% for audio in audio_files %}
+            <div class="col-12 col-md-6 col-xl-4 audio-item" data-title="{{ audio.title|lower }}" data-subtitle="{{ audio.subtitle|default:''|lower }}" data-producer="{{ audio.producer|default:''|lower }}" data-category="{{ audio.category.id|default:'none' }}">
+                <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden position-relative hover-shadow transition-all" style="background-color: var(--bg-card, #fff); border: 1px solid var(--border-color, #e9ecef) !important;">
+                    
+                    <div class="card-body p-4 d-flex flex-column">
+                        <!-- Entête de carte sécurisé -->
+                        <div class="d-flex align-items-center justify-content-between gap-2 mb-3 flex-wrap">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="icon-shape icon-tint-primary rounded-circle d-flex align-items-center justify-content-center fw-bold flex-shrink-0" style="width: 44px; height: 44px;">
+                                    <i class="bi bi-mic-fill fs-5"></i>
+                                </div>
+                            </div>
+
+                            {% if audio.category %}
+                                <span class="badge bg-soft-green rounded-pill px-3 py-2 small fw-semibold text-truncate ms-auto" style="max-width: 150px;" title="{{ audio.category.name }}">
+                                    {{ audio.category.name }}
+                                </span>
+                            {% else %}
+                                <span class="badge bg-light text-muted rounded-pill px-3 py-2 small ms-auto">Sans catégorie</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Titre & Producteur -->
+                        <h5 class="fw-bold mb-1 text-truncate" title="{{ audio.title }}">
+                            <a class="text-decoration-none text-dark" href="{% url 'audio_detail' audio.id %}">{{ audio.title }}</a>
+                        </h5>
+                        
+                        {% if audio.producer %}
+                            <p class="small text-theme-green mb-2 fw-medium"><i class="bi bi-person-fill me-1"></i>{{ audio.producer }}</p>
+                        {% else %}
+                            <p class="small text-muted mb-2 opacity-75">Producteur inconnu</p>
+                        {% endif %}
+
+                        <!-- Sous-titre / Description -->
+                        <p class="text-muted small mb-3 flex-grow-1 line-clamp-2">
+                            {{ audio.subtitle|default:"Aucun sous-titre ou description disponible pour cette archive audio." }}
+                        </p>
+
+                        <hr class="my-3 opacity-25" style="border-color: var(--border-color, #e9ecef);">
+
+                        <!-- Pied de carte avec actions -->
+                        <div class="d-flex justify-content-between align-items-center mt-auto">
+                            <div class="d-flex align-items-center gap-1 text-muted small">
+                                <i class="bi bi-calendar3"></i>
+                                <span>{{ audio.uploaded_at|date:"d/m/Y" }}</span>
+                            </div>
+                            
+                            <div class="d-flex align-items-center gap-2">
+                                <a class="btn btn-sm btn-outline-primary rounded-3 px-2 py-1 d-inline-flex align-items-center gap-1" href="{% url 'edit_audio' audio.id %}" title="Modifier">
+                                    <i class="bi bi-pencil-square"></i> <span class="d-none d-sm-inline">Modifier</span>
+                                </a>
+
+                                <button type="button" class="btn btn-sm btn-outline-danger rounded-3 px-2 py-1 d-inline-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#deleteModalGrid{{ audio.id }}" title="Supprimer">
+                                    <i class="bi bi-trash-fill"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4 text-center py-5" style="background-color: var(--bg-card, #fff); border: 1px solid var(--border-color, #e9ecef) !important;">
+                <div class="icon-shape icon-tint-primary rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 64px; height: 64px;">
+                    <i class="bi bi-file-earmark-music fs-2"></i>
+                </div>
+                <h5 class="fw-bold mb-1">Aucune archive audio trouvée</h5>
+                <p class="mb-3 text-muted">Ajustez vos filtres ou ajoutez une nouvelle archive sonore.</p>
+                <div>
+                    <a href="{% url 'add_audio' %}" class="btn btn-custom-primary rounded-3 px-4">
+                        <i class="bi bi-plus-circle-fill me-1"></i> Ajouter le premier audio
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- SECTION 2 : Vue en Liste (Tableau moderne) -->
+<div id="list-view" class="card border-0 shadow-sm rounded-4 overflow-hidden d-none" style="background-color: var(--bg-card, #fff); border: 1px solid var(--border-color, #e9ecef) !important;">
+    <div class="table-responsive">
+        <table class="table align-middle table-hover mb-0">
+            <thead class="table-custom-header table-light">
+                <tr>
+                    <th scope="col" class="ps-4">Titre</th>
+                    <th scope="col">Catégorie</th>
+                    <th scope="col">Producteur</th>
+                    <th scope="col">Ajouté le</th>
+                    <th scope="col" class="text-end pe-4">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for audio in audio_files %}
+                    <tr class="audio-item" data-title="{{ audio.title|lower }}" data-subtitle="{{ audio.subtitle|default:''|lower }}" data-producer="{{ audio.producer|default:''|lower }}" data-category="{{ audio.category.id|default:'none' }}">
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="icon-shape icon-tint-primary rounded-3 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px;">
+                                    <i class="bi bi-mic-fill fs-5"></i>
+                                </div>
+                                <div>
+                                    <a href="{% url 'audio_detail' audio.id %}" class="fw-bold text-decoration-none text-theme-green d-block">{{ audio.title }}</a>
+                                    <span class="text-muted small">{{ audio.subtitle|default:"Sans sous-titre"|truncatechars:45 }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if audio.category %}
+                                <span class="badge bg-soft-green rounded-pill px-3 py-1 small">{{ audio.category.name }}</span>
+                            {% else %}
+                                <span class="text-muted small">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="small fw-medium text-secondary">{{ audio.producer|default:"-" }}</td>
+                        <td class="small text-muted">{{ audio.uploaded_at|date:"d/m/Y H:i" }}</td>
+                        <td class="text-end pe-4">
+                            <div class="d-inline-flex gap-2 justify-content-end align-items-center">
+                                <a class="btn btn-sm btn-outline-primary rounded-2 px-2 py-1 d-inline-flex align-items-center gap-1" href="{% url 'edit_audio' audio.id %}">
+                                    <i class="bi bi-pencil-square"></i> <span>Modifier</span>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger rounded-2 px-2 py-1 d-inline-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#deleteModalList{{ audio.id }}">
+                                    <i class="bi bi-trash-fill"></i> <span>Supprimer</span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- TOUTES LES MODALES DE SUPPRESSION (Placées hors des vues pour prévenir tout conflit DOM) -->
+{% for audio in audio_files %}
+    <!-- Modal pour Vue Grille -->
+    <div class="modal fade text-start" id="deleteModalGrid{{ audio.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold text-danger d-flex align-items-center gap-2">
+                        <i class="bi bi-exclamation-triangle-fill"></i> Confirmation de suppression
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body py-3">
+                    Êtes-vous sûr de vouloir supprimer définitivement l'archive audio : 
+                    <strong class="d-block mt-2 text-body fs-6">"{{ audio.title }}"</strong>
+                    <span class="text-muted small d-block mt-1">Cette action est irréversible et supprimera également le fichier audio du serveur.</span>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-3 px-3" data-bs-dismiss="modal">Annuler</button>
+                    <form action="{% url 'delete_audio' audio.id %}" method="POST" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger rounded-3 px-3">Confirmer la suppression</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pour Vue Liste -->
+    <div class="modal fade text-start" id="deleteModalList{{ audio.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold text-danger d-flex align-items-center gap-2">
+                        <i class="bi bi-exclamation-triangle-fill"></i> Confirmation de suppression
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body py-3">
+                    Êtes-vous sûr de vouloir supprimer définitivement l'archive audio : 
+                    <strong class="d-block mt-2 text-body fs-6">"{{ audio.title }}"</strong>
+                    <span class="text-muted small d-block mt-1">Cette action est irréversible et supprimera également le fichier audio du serveur.</span>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-3 px-3" data-bs-dismiss="modal">Annuler</button>
+                    <form action="{% url 'delete_audio' audio.id %}" method="POST" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger rounded-3 px-3">Confirmer la suppression</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+
+<script>
+    // Basculement entre Vue Grille et Vue Liste
+    function switchView(view) {
+        const gridView = document.getElementById('grid-view');
+        const listView = document.getElementById('list-view');
+        const btnGrid = document.getElementById('btn-view-grid');
+        const btnList = document.getElementById('btn-view-list');
+
+        if (view === 'grid') {
+            gridView.classList.remove('d-none');
+            listView.classList.add('d-none');
+            btnGrid.classList.add('active');
+            btnList.classList.remove('active');
+        } else {
+            gridView.classList.add('d-none');
+            listView.classList.remove('d-none');
+            btnList.classList.add('active');
+            btnGrid.classList.remove('active');
+        }
+    }
+
+    // Filtrage dynamique des fichiers audio sans rechargement
+    document.getElementById('audioSearchInput')?.addEventListener('keyup', function (e) {
+        const query = e.target.value.toLowerCase();
+        const items = document.querySelectorAll('.audio-item');
+
+        items.forEach(item => {
+            const title = item.getAttribute('data-title') || '';
+            const subtitle = item.getAttribute('data-subtitle') || '';
+            const producer = item.getAttribute('data-producer') || '';
+
+            if (title.includes(query) || subtitle.includes(query) || producer.includes(query)) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+    let currentCategory = 'all';
+    let currentSearchQuery = '';
+
+    const searchInput = document.getElementById('audioSearchInput');
+    const categoryButtons = document.querySelectorAll('.category-filter-btn');
+    const audioItems = document.querySelectorAll('.audio-item');
+
+    // Fonction principale de filtrage
+    function filterItems() {
+        audioItems.forEach(item => {
+            const title = item.getAttribute('data-title') || '';
+            const subtitle = item.getAttribute('data-subtitle') || '';
+            const producer = item.getAttribute('data-producer') || '';
+            const category = item.getAttribute('data-category') || '';
+
+            // 1. Vérification du filtre texte
+            const matchesSearch = title.includes(currentSearchQuery) || 
+                                  subtitle.includes(currentSearchQuery) || 
+                                  producer.includes(currentSearchQuery);
+
+            // 2. Vérification du filtre catégorie
+            const matchesCategory = (currentCategory === 'all') || (category === currentCategory);
+
+            // Afficher seulement si les 2 conditions sont remplies
+            if (matchesSearch && matchesCategory) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+
+    // Événement : Recherche textuelle
+    searchInput?.addEventListener('keyup', function (e) {
+        currentSearchQuery = e.target.value.toLowerCase().trim();
+        filterItems();
+    });
+
+    // Événement : Clic sur une catégorie
+    categoryButtons.forEach(btn => {
+        btn.addEventListener('click', function () {
+            // Mettre à jour la catégorie active
+            currentCategory = this.getAttribute('data-category-id');
+
+            // Mise à jour visuelle des boutons (Active / Inactive)
+            categoryButtons.forEach(b => {
+                b.classList.remove('active-filter');
+                b.classList.add('inactive-filter');
+            });
+            this.classList.remove('inactive-filter');
+            this.classList.add('active-filter');
+
+            // Appliquer le filtre
+            filterItems();
+        });
+    });
+});
+</script>
+{% endblock %}

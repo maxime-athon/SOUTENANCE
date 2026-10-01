@@ -1,0 +1,287 @@
+{% extends 'base.html' %}
+{% block title %}Journal d'audit & Traçabilité | SI-Archives{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --theme-green: #225A40;
+        --theme-red: #D21E34;
+        --theme-yellow: #F6C400;
+    }
+
+    .btn-custom-primary {
+        background-color: var(--theme-green) !important;
+        color: #ffffff !important;
+        border: none !important;
+        transition: all 0.25s ease;
+    }
+    .btn-custom-primary:hover {
+        background-color: #1a4632 !important;
+        color: #ffffff !important;
+    }
+
+    .text-theme-green { color: var(--theme-green) !important; }
+    .text-theme-red { color: var(--theme-red) !important; }
+
+    .custom-card {
+        background-color: var(--bs-card-bg, #ffffff);
+        border: 1px solid var(--bs-border-color) !important;
+    }
+    .filter-box {
+        background-color: var(--bs-body-bg);
+        border: 1px solid var(--bs-border-color) !important;
+    }
+
+    /* Badges personnalisés par type d'action */
+    .badge-create {
+        background-color: rgba(25, 135, 84, 0.12) !important;
+        color: #198754 !important;
+        border: 1px solid rgba(25, 135, 84, 0.2) !important;
+    }
+    .badge-update {
+        background-color: rgba(246, 196, 0, 0.18) !important;
+        color: #8a6d00 !important;
+        border: 1px solid rgba(246, 196, 0, 0.4) !important;
+    }
+    .badge-delete {
+        background-color: rgba(210, 30, 52, 0.12) !important;
+        color: var(--theme-red) !important;
+        border: 1px solid rgba(210, 30, 52, 0.2) !important;
+    }
+    .badge-auth {
+        background-color: rgba(13, 202, 240, 0.12) !important;
+        color: #0dcaf0 !important;
+        border: 1px solid rgba(13, 202, 240, 0.2) !important;
+    }
+    .badge-consult {
+        background-color: rgba(108, 117, 125, 0.12) !important;
+        color: #6c757d !important;
+        border: 1px solid rgba(108, 117, 125, 0.2) !important;
+    }
+</style>
+
+<!-- EN-TÊTE PAGE -->
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+        <h2 class="fw-bold mb-1">Journal d'Audit & Traçabilité</h2>
+        <p class="text-muted small mb-0">Historique complet des actions, modifications et accès enregistrés sur la plateforme.</p>
+    </div>
+
+    <!-- BOUTON D'EXPORTATION BOOTSTRAP 5 -->
+    <div class="dropdown">
+        <button class="btn btn-outline-secondary rounded-3 dropdown-toggle d-flex align-items-center gap-2 shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-download"></i>
+            <span>Exporter les registres</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 mt-2">
+            <li>
+                <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="?q={{ current_q }}&action={{ current_action }}&module={{ current_module }}&date_from={{ current_date_from }}&date_to={{ current_date_to }}&export=excel">
+                    <i class="bi bi-file-earmark-excel-fill text-success"></i> Excel / CSV
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="?q={{ current_q }}&action={{ current_action }}&module={{ current_module }}&date_from={{ current_date_from }}&date_to={{ current_date_to }}&export=pdf">
+                    <i class="bi bi-file-earmark-pdf-fill text-danger"></i> Document PDF
+                </a>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="?q={{ current_q }}&action={{ current_action }}&module={{ current_module }}&date_from={{ current_date_from }}&date_to={{ current_date_to }}&export=json">
+                    <i class="bi bi-filetype-json text-warning"></i> Format Brut JSON
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<!-- SECTION : FILTRES ET LISTE DES LOGS -->
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm rounded-4 custom-card">
+            <div class="card-header bg-transparent border-bottom p-4 d-flex flex-wrap justify-content-between align-items-center gap-3" style="border-color: var(--bs-border-color) !important;">
+                <h4 class="fw-bold mb-0 d-flex align-items-center gap-2">
+                    <i class="bi bi-shield-lock-fill text-theme-green"></i> Événements d'Audit
+                </h4>
+                <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3 py-2 fw-semibold border">
+                    {{ page_obj.paginator.count }} enregistrement{% if page_obj.paginator.count > 1 %}s{% endif %}
+                </span>
+            </div>
+
+            <div class="card-body p-4">
+                <!-- FORMULAIRE DE FILTRE MULTICRITÈRE -->
+                <form method="get" class="mb-4 p-3 rounded-3 filter-box">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-12 col-md-3">
+                            <label for="q" class="form-label small fw-semibold text-muted">Recherche globale</label>
+                            <input type="text" name="q" id="q" class="form-control rounded-3" placeholder="Utilisateur, IP, mot-clé..." value="{{ current_q }}">
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <label for="action" class="form-label small fw-semibold text-muted">Action</label>
+                            <select name="action" id="action" class="form-select rounded-3">
+                                <option value="">Toutes</option>
+                                {% for key, val in action_choices %}
+                                    <option value="{{ key }}" {% if current_action == key %}selected{% endif %}>{{ val }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <label for="module" class="form-label small fw-semibold text-muted">Module</label>
+                            <select name="module" id="module" class="form-select rounded-3">
+                                <option value="">Tous</option>
+                                {% for mod in modules_list %}
+                                    <option value="{{ mod }}" {% if current_module == mod %}selected{% endif %}>{{ mod }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <label for="date_from" class="form-label small fw-semibold text-muted">Du</label>
+                            <input type="date" name="date_from" id="date_from" class="form-control rounded-3" value="{{ current_date_from }}">
+                        </div>
+                        <div class="col-6 col-md-2">
+                            <label for="date_to" class="form-label small fw-semibold text-muted">Au</label>
+                            <input type="date" name="date_to" id="date_to" class="form-control rounded-3" value="{{ current_date_to }}">
+                        </div>
+                        <div class="col-12 col-md-1">
+                            <button type="submit" class="btn btn-custom-primary w-100 rounded-3 d-flex align-items-center justify-content-center" title="Appliquer les filtres">
+                                <i class="bi bi-funnel-fill"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- TABLEAU DES LOGS -->
+                {% if page_obj %}
+                    <div class="table-responsive">
+                        <table class="table align-middle table-hover mb-0">
+                            <thead>
+                                <tr class="text-muted small">
+                                    <th>Horodatage</th>
+                                    <th>Utilisateur</th>
+                                    <th>Action</th>
+                                    <th>Module</th>
+                                    <th>Description</th>
+                                    <th>Adresse IP</th>
+                                    <th class="text-end">Contexte</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in page_obj %}
+                                    <tr>
+                                        <td class="small fw-semibold text-nowrap">
+                                            {{ log.timestamp|date:"d/m/Y H:i:s" }}
+                                        </td>
+                                        <td>
+                                            {% if log.user %}
+                                                <div class="fw-bold small">{{ log.user.username }}</div>
+                                            {% else %}
+                                                <span class="badge bg-secondary-subtle text-secondary rounded-pill small">Système</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if log.action == 'CREATE' %}
+                                                <span class="badge badge-create rounded-pill px-3 py-1 fw-semibold">Création</span>
+                                            {% elif log.action == 'UPDATE' %}
+                                                <span class="badge badge-update rounded-pill px-3 py-1 fw-semibold">Modification</span>
+                                            {% elif log.action == 'DELETE' %}
+                                                <span class="badge badge-delete rounded-pill px-3 py-1 fw-semibold">Suppression</span>
+                                            {% elif log.action == 'LOGIN' or log.action == 'LOGOUT' %}
+                                                <span class="badge badge-auth rounded-pill px-3 py-1 fw-semibold">{{ log.get_action_display }}</span>
+                                            {% else %}
+                                                <span class="badge badge-consult rounded-pill px-3 py-1 fw-semibold">{{ log.get_action_display }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-body-tertiary text-body border rounded-2 font-monospace small">{{ log.module }}</span>
+                                        </td>
+                                        <td class="small text-break">
+                                            {{ log.description|truncatechars:90 }}
+                                        </td>
+                                        <td>
+                                            <code class="small">{{ log.ip_address|default:"N/A" }}</code>
+                                        </td>
+                                        <td class="text-end">
+                                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-3" data-bs-toggle="modal" data-bs-target="#contextModal{{ log.id }}" title="Inspecter le contexte">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+
+                                            <!-- MODAL CONTEXTE DE L'ACTION -->
+                                            <div class="modal fade text-start" id="contextModal{{ log.id }}" tabindex="-1" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered modal-lg">
+                                                    <div class="modal-content rounded-4 border-0 shadow">
+                                                        <div class="modal-header border-bottom p-4">
+                                                            <h5 class="modal-title fw-bold text-theme-green d-flex align-items-center gap-2">
+                                                                <i class="bi bi-search-heart"></i> Détails de l'événement d'audit
+                                                            </h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body p-4">
+                                                            <div class="row g-3 mb-3">
+                                                                <div class="col-12 col-md-4">
+                                                                    <span class="text-muted small d-block">Horodatage</span>
+                                                                    <strong class="small">{{ log.timestamp|date:"d/m/Y à H:i:s" }}</strong>
+                                                                </div>
+                                                                <div class="col-12 col-md-4">
+                                                                    <span class="text-muted small d-block">Opérateur</span>
+                                                                    <strong class="small">{{ log.user.username|default:"Système / Automatique" }}</strong>
+                                                                </div>
+                                                                <div class="col-12 col-md-4">
+                                                                    <span class="text-muted small d-block">Adresse IP</span>
+                                                                    <code>{{ log.ip_address|default:"Non enregistrée" }}</code>
+                                                                </div>
+                                                            </div>
+                                                            <hr class="my-3 opacity-25">
+                                                            <div class="mb-2">
+                                                                <span class="text-muted small d-block mb-1">Description complète de l'action</span>
+                                                                <div class="p-3 bg-body-tertiary rounded-3 border font-monospace small">
+                                                                    {{ log.description }}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer border-top p-3">
+                                                            <button type="button" class="btn btn-light rounded-3 px-4" data-bs-dismiss="modal">Fermer</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- PAGINATION BOOTSTRAP 5 -->
+                    {% if page_obj.has_other_pages %}
+                        <nav class="mt-4">
+                            <ul class="pagination justify-content-center mb-0">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link rounded-start-3" href="?page={{ page_obj.previous_page_number }}&q={{ current_q }}&action={{ current_action }}&module={{ current_module }}&date_from={{ current_date_from }}&date_to={{ current_date_to }}">Précédent</a>
+                                    </li>
+                                {% endif %}
+                                
+                                <li class="page-item disabled">
+                                    <span class="page-link text-dark font-weight-bold">Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}</span>
+                                </li>
+
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link rounded-end-3" href="?page={{ page_obj.next_page_number }}&q={{ current_q }}&action={{ current_action }}&module={{ current_module }}&date_from={{ current_date_from }}&date_to={{ current_date_to }}">Suivant</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    {% endif %}
+
+                {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-shield-x fs-1 d-block mb-2 opacity-50"></i>
+                        <p class="mb-0">Aucune donnée d'audit ne correspond à vos critères de recherche.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
