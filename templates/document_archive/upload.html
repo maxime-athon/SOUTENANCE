@@ -103,7 +103,7 @@
                             <label for="{{ form.tags.id_for_label }}" class="form-label fw-semibold">Mots-clés (Tags)</label>
                             <div class="input-group">
                                 <span class="input-group-text border-end-0 text-muted" style="background-color: var(--bg-body); border-color: var(--border-color);"><i class="bi bi-tags"></i></span>
-                                <input type="text" name="tags" id="{{ form.tags.id_for_label }}" class="form-control border-start-0 ps-0" placeholder="Séparés par des virgules (ex: finance, rapport, 2026)" value="{{ form.tags.value|default:'' }}">
+                                <input type="text" name="tags" id="{{ form.tags.id_for_label }}" class="form-control border-start-0 ps-0" placeholder="Séparés par des espace (ex: finance rapport 2026)" value="{{ form.tags.value|default:'' }}">
                             </div>
                         </div>
 

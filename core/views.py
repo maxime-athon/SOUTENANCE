@@ -101,7 +101,7 @@ def login_view(request):
         AuditLog.objects.create(
             user=user,
             action='LOGIN',
-            module='AUTHENTIFICATION',
+            module='AUTH',
             description=f"Connexion réussie de l'utilisateur {user.username}",
             ip_address=get_client_ip(request)
         )
@@ -118,7 +118,7 @@ def logout_view(request):
     AuditLog.objects.create(
         user=request.user,
         action='LOGOUT',
-        module='AUTHENTIFICATION',
+        module='AUTH',
         description=f"Déconnexion de l'utilisateur {request.user.username}",
         ip_address=get_client_ip(request)
     )

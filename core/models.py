@@ -80,7 +80,7 @@ class AuditLog(models.Model):
         ('CREATE', 'Création'),
         ('UPDATE', 'Modification'),
         ('DELETE', 'Suppression'),
-        ('CONSULT', 'Consultation / Téléchargement'),
+        ('CONSULT', 'Consultation'),
         ('LOGIN', 'Connexion'),
         ('LOGOUT', 'Déconnexion'),
     ]
