@@ -269,14 +269,49 @@
 </div>
 {% endif %}
 
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1090;">
+    <div id="ocrCopyToast" class="toast align-items-center border-0 shadow" role="status" aria-live="polite" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body d-flex align-items-center gap-2">
+                <i id="ocrCopyToastIcon" class="bi bi-check-circle-fill text-success"></i>
+                <span id="ocrCopyToastMessage">Texte OCR copié dans le presse-papiers.</span>
+            </div>
+            <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Fermer"></button>
+        </div>
+    </div>
+</div>
+
 <script>
-    function copyOcrText() {
+    async function copyOcrText() {
         const textContainer = document.getElementById('ocrTextContainer');
-        if (textContainer) {
-            navigator.clipboard.writeText(textContainer.textContent).then(() => {
-                alert('Texte OCR copié dans le presse-papier !');
-            });
+        if (!textContainer) return;
+
+        let copied = false;
+        try {
+            await navigator.clipboard.writeText(textContainer.textContent);
+            copied = true;
+        } catch (error) {
+            const temporaryField = document.createElement('textarea');
+            temporaryField.value = textContainer.textContent;
+            temporaryField.setAttribute('readonly', '');
+            temporaryField.style.position = 'fixed';
+            temporaryField.style.opacity = '0';
+            document.body.appendChild(temporaryField);
+            temporaryField.select();
+            copied = document.execCommand('copy');
+            temporaryField.remove();
         }
+
+        const toast = document.getElementById('ocrCopyToast');
+        const toastIcon = document.getElementById('ocrCopyToastIcon');
+        const toastMessage = document.getElementById('ocrCopyToastMessage');
+        toastMessage.textContent = copied
+            ? 'Texte OCR copié dans le presse-papiers.'
+            : 'La copie a échoué. Veuillez sélectionner le texte manuellement.';
+        toastIcon.className = copied
+            ? 'bi bi-check-circle-fill text-success'
+            : 'bi bi-exclamation-circle-fill text-danger';
+        bootstrap.Toast.getOrCreateInstance(toast, { delay: 3500 }).show();
     }
 </script>
 {% endblock %}

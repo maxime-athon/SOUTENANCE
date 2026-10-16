@@ -1,10 +1,9 @@
 {% if pagination and pagination.total or show_clear_history %}
 <nav class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 my-4" aria-label="Pagination des résultats">
     {% if show_clear_history %}
-        <form method="post" action="{% url 'clear_history' %}" onsubmit="return confirm('Voulez-vous vraiment effacer tout votre historique de consultation et d’écoute ?');">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-link btn-sm text-danger p-0 text-decoration-none">Effacer l’historique</button>
-        </form>
+        <button type="button" class="btn btn-link btn-sm text-danger p-0 text-decoration-none" data-bs-toggle="modal" data-bs-target="#clearHistoryModal">
+            Effacer l’historique
+        </button>
     {% else %}
         {% comment %} <small class="text-muted">Affichage de {{ pagination.first }} à {{ pagination.last }} sur {{ pagination.total }}</small> {% endcomment %}
     {% endif %}
