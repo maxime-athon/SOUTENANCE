@@ -15,7 +15,7 @@ def log_favorite_add(sender, instance, created, **kwargs):
         AuditLog.objects.create(
             user=instance.user,
             action='UPDATE',
-            module='FAVORIS_DOCUMENT',
+            module='FAVORIS_DOC',
             description=f'Ajout aux favoris du document « {instance.document.title} »',
         )
 
@@ -25,7 +25,7 @@ def log_favorite_remove(sender, instance, **kwargs):
     AuditLog.objects.create(
         user=instance.user,
         action='UPDATE',
-        module='FAVORIS_DOCUMENT',
+        module='FAVORIS_DOC',
         description=f'Retrait des favoris du document « {instance.document.title} »',
     )
 

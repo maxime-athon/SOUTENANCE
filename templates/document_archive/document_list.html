@@ -25,7 +25,7 @@
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
     <div>
         <h1 class="fw-bold mb-1">Archives documentaires</h1>
-        <p class="text-muted mb-0">Exploration et gestion du fonds documentaire avec OCR et recherche avancée.</p>
+        {% comment %} <p class="text-muted mb-0">Exploration et gestion du fonds documentaire avec OCR et recherche avancée.</p> {% endcomment %}
     </div>
     {% if can_edit %}
         <a class="btn btn-custom-primary rounded-3 d-inline-flex align-items-center gap-2 shadow-sm" href="{% url 'upload_document' %}">
