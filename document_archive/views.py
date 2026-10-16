@@ -1,4 +1,5 @@
 from django.http import JsonResponse, HttpResponse
+from django.core.paginator import Paginator
 import csv
 import json
 from django.shortcuts import render, redirect, get_object_or_404
@@ -15,6 +16,7 @@ from .models import Document, Favorite as DocumentFavorite
 from core.forms import UserForm
 from core.models import AuditLog
 from core.services import get_client_ip
+from core.pagination import build_pagination
 from audio_archive.models import AudioFile
 import os
 from io import BytesIO
@@ -170,21 +172,36 @@ def generate_thumbnail(file_path):
 def document_list(request):
     
     if not (request.user.is_staff or request.user.is_superuser):
-        messages.info(request, "Cette page est réservée à la gestion des archives. Redirection vers votre tableau de bord.")
+        messages.info(request, "Cette page est réservée à la gestion des archives. Redirection vers la recherche documentaire.")
         return redirect('search_document')
     
     """Affiche la liste complète des documents filtrable par catégorie."""
-    documents = Document.objects.all().order_by('-uploaded_at')
+    documents = Document.objects.select_related('category', 'uploaded_by').all().order_by('-uploaded_at')
     categories = Category.objects.all()
     category_id = request.GET.get('category')
+    query = request.GET.get('q', '').strip()
 
     if category_id:
         documents = documents.filter(category_id=category_id)
+    if query:
+        documents = documents.filter(
+            Q(title__icontains=query) |
+            Q(author__icontains=query) |
+            Q(description__icontains=query) |
+            Q(tags__icontains=query)
+        )
+
+    paginator = Paginator(documents, 12)
+    page_obj = paginator.get_page(request.GET.get('page'))
 
     can_edit = request.user.groups.filter(name__in=['Admin', 'Archiviste']).exists() or request.user.is_superuser
     
     return render(request, 'document_archive/document_list.html', {
-        'documents': documents,
+        'documents': page_obj,
+        'page_obj': page_obj,
+        'pagination': build_pagination(request, page_obj),
+        'total_documents': paginator.count,
+        'current_query': query,
         'categories': categories,
         'can_edit': can_edit
     })
@@ -347,14 +364,23 @@ def search_document(request):
     if ocr_only == '1':
         documents = documents.exclude(ocr_text__isnull=True).exclude(ocr_text__exact='')
 
-    user_fav_ids = set(Favorite.objects.filter(user=request.user).values_list('document_id', flat=True))
-    for doc in documents:
+    paginator = Paginator(documents, 12)
+    page_obj = paginator.get_page(request.GET.get('page'))
+    page_documents = page_obj.object_list
+    user_fav_ids = set(Favorite.objects.filter(
+        user=request.user,
+        document_id__in=page_documents.values_list('id', flat=True),
+    ).values_list('document_id', flat=True))
+    for doc in page_documents:
         doc.is_favorite_user = doc.id in user_fav_ids
 
     categories = Category.objects.all()
 
     return render(request, 'core/search_document.html', {
-        'documents': documents,
+        'documents': page_documents,
+        'page_obj': page_obj,
+        'pagination': build_pagination(request, page_obj),
+        'total_documents': paginator.count,
         'categories': categories,
         'query': query,
         'selected_category': category_id,

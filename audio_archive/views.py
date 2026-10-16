@@ -24,6 +24,7 @@ from core.services import (
     generate_clean_title, 
     extract_audio_duration
 )
+from core.pagination import build_pagination
 
 
 def is_staff_or_admin(user):
@@ -116,6 +117,7 @@ def audio_list(request):
     
     return render(request, 'audio_archive/audio_list.html', {
         'page_obj': page_obj,
+        'pagination': build_pagination(request, page_obj),
         'categories': Category.objects.all(),
         'languages': Language.objects.filter(is_active=True),
     })
@@ -159,6 +161,7 @@ def search_audio(request):
 
     context = {
         'page_obj': page_obj,
+        'pagination': build_pagination(request, page_obj),
         'audios': page_obj,
         'categories': Category.objects.all(),
         'languages': Language.objects.filter(is_active=True),
@@ -192,7 +195,8 @@ def category_detail(request, category_id):
     return render(request, 'categories/category_detail.html', {
         'category': category,
         'page_obj': page_obj,
-        'audio_files': audio_files
+        'pagination': build_pagination(request, page_obj),
+        'audio_files': page_obj.object_list,
     })
 
 
@@ -217,18 +221,62 @@ def stream_audio(request, audio_id):
         raise Http404("Fichier sonore inexistant.")
 
     content, filename, ctype = decompress_file(audio.file)
+    total_size = len(content)
+    content_type = ctype or mimetypes.guess_type(filename)[0] or 'audio/mpeg'
+    range_header = request.headers.get('Range')
 
-    AudioFile.objects.filter(id=audio_id).update(play_count=F('play_count') + 1)
-    AudioView.objects.create(user=request.user, audio_file=audio)
-    AuditLog.objects.create(
-        user=request.user,
-        action='CONSULT',
-        module='AUDIO',
-        description=f'Écoute de l\'archive audio "{audio.title}"',
-        ip_address=get_client_ip(request),
-    )
+    # Le lecteur HTML5 demande des plages d'octets lorsqu'on avance dans la piste.
+    # Sans réponse 206/Content-Range, certains navigateurs redémarrent le flux au début.
+    response_status = 200
+    response_headers = {'Accept-Ranges': 'bytes'}
+    body = content
+    if range_header:
+        try:
+            unit, range_value = range_header.strip().split('=', 1)
+            if unit != 'bytes' or ',' in range_value:
+                raise ValueError
+            first, last = range_value.split('-', 1)
+            if first:
+                start = int(first)
+                end = int(last) if last else total_size - 1
+            else:
+                suffix_length = int(last)
+                if suffix_length <= 0:
+                    raise ValueError
+                start = max(0, total_size - suffix_length)
+                end = total_size - 1
+            if start < 0 or start >= total_size or end < start:
+                raise IndexError
+            end = min(end, total_size - 1)
+            body = content[start:end + 1]
+            response_status = 206
+            response_headers['Content-Range'] = f'bytes {start}-{end}/{total_size}'
+        except IndexError:
+            response = HttpResponse(status=416)
+            response['Content-Range'] = f'bytes */{total_size}'
+            response['Accept-Ranges'] = 'bytes'
+            return response
+        except (ValueError, TypeError):
+            # Ignore malformed or unsupported Range headers and return the full file.
+            pass
 
-    return HttpResponse(content, content_type=ctype or 'audio/mpeg')
+    response = HttpResponse(body, status=response_status, content_type=content_type)
+    for header, value in response_headers.items():
+        response[header] = value
+    response['Content-Length'] = str(len(body))
+
+    if response_status == 200 or response_headers.get('Content-Range', '').startswith('bytes 0-'):
+        AudioFile.objects.filter(id=audio_id).update(play_count=F('play_count') + 1)
+        AudioView.objects.create(user=request.user, audio_file=audio)
+        AuditLog.objects.create(
+            user=request.user,
+            action='CONSULT',
+            module='AUDIO',
+            description=f'Écoute de l\'archive audio "{audio.title}"',
+            ip_address=get_client_ip(request),
+        )
+
+    return response
 
 
 @login_required
@@ -270,7 +318,9 @@ def audio_management(request):
     
     return render(request, 'audio_archive/audio_management.html', {
         'page_obj': page_obj,
-        'audio_files': audios,
+        'pagination': build_pagination(request, page_obj),
+        'audio_files': page_obj.object_list,
+        'total_audio_files': page_obj.paginator.count,
         'categories': Category.objects.all()
     })
 

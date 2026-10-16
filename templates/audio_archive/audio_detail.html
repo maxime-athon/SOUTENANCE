@@ -41,6 +41,13 @@
         height: 6px;
         cursor: pointer;
         background-color: rgba(255, 255, 255, 0.2);
+        touch-action: none;
+        position: relative;
+    }
+
+    .custom-progress:focus-visible {
+        outline: 2px solid #F6C400;
+        outline-offset: 4px;
     }
 
     .custom-progress-bar {
@@ -51,12 +58,10 @@
 <!-- Barre de navigation / Fil d'Ariane & Actions -->
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
     <div>
-        {% if user.is_staff or user.is_superuser %}
-            <a href="{% url 'audio_management' %}" class="btn btn-sm btn-outline-secondary rounded-3 mb-2 d-inline-flex align-items-center gap-1">
-                <i class="bi bi-arrow-left"></i> Retour
-            </a>
-        {% endif %}
-        
+        {% comment %} <a href="{% url 'search_audio' %}" class="btn btn-sm btn-outline-secondary rounded-3 mb-2 d-inline-flex align-items-center gap-1">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a> {% endcomment %}
+
         <div class="d-flex align-items-center gap-2">
             <h1 class="h3 fw-bold mb-0">{{ audio.title }}</h1>
             {% if audio.is_featured %}
@@ -72,9 +77,9 @@
 
     <!-- Actions rapides -->
     <div class="d-flex align-items-center gap-2">
-        <a href="{% url 'download_audio' audio.id %}" class="btn text-white rounded-3 d-inline-flex align-items-center gap-1" style="background-color: #225A40;" title="Télécharger le fichier">
+        {% comment %} <a href="{% url 'download_audio' audio.id %}" class="btn text-white rounded-3 d-inline-flex align-items-center gap-1" style="background-color: #225A40;" title="Télécharger le fichier">
             <i class="bi bi-download"></i>
-        </a>
+        </a> {% endcomment %}
 
         {% if user.is_staff or user.is_superuser %}
             <a href="{% url 'edit_audio' audio.id %}" class="btn btn-outline-primary rounded-3 d-inline-flex align-items-center gap-1">
@@ -106,7 +111,9 @@
             <audio id="mainAudio" src="{% url 'stream_audio' audio.id %}" preload="metadata"></audio>
 
             <div class="mt-2">
-                <div class="progress custom-progress rounded-pill mb-2" id="progressContainer">
+                <div class="progress custom-progress rounded-pill mb-2" id="progressContainer"
+                     role="slider" tabindex="0" aria-label="Position dans l’enregistrement"
+                     aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" aria-valuetext="00:00">
                     <div class="progress-bar custom-progress-bar rounded-pill" id="progressBar" role="progressbar" style="width: 0%"></div>
                 </div>
 
@@ -286,9 +293,23 @@
             return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
         }
 
+        function updateTimeline() {
+            const duration = audio.duration;
+            if (!Number.isFinite(duration) || duration <= 0) return;
+
+            const currentTime = Math.min(Math.max(audio.currentTime, 0), duration);
+            const progressPercent = (currentTime / duration) * 100;
+            progressBar.style.width = `${progressPercent}%`;
+            currentTimeEl.textContent = formatTime(currentTime);
+            progressContainer.setAttribute('aria-valuemax', String(Math.floor(duration)));
+            progressContainer.setAttribute('aria-valuenow', String(Math.floor(currentTime)));
+            progressContainer.setAttribute('aria-valuetext', `${formatTime(currentTime)} sur ${formatTime(duration)}`);
+        }
+
         audio.addEventListener('loadedmetadata', function () {
-            if (audio.duration && !isNaN(audio.duration)) {
+            if (audio.duration && Number.isFinite(audio.duration)) {
                 totalDurationEl.textContent = formatTime(audio.duration);
+                updateTimeline();
             }
         });
 
@@ -304,17 +325,43 @@
             }
         });
 
-        audio.addEventListener('timeupdate', function () {
-            const progressPercent = (audio.currentTime / audio.duration) * 100;
-            progressBar.style.width = `${progressPercent}%`;
-            currentTimeEl.textContent = formatTime(audio.currentTime);
-        });
+        audio.addEventListener('timeupdate', updateTimeline);
 
-        progressContainer.addEventListener('click', function (e) {
-            const width = this.clientWidth;
-            const clickX = e.offsetX;
+        function seekFromPointer(event) {
             const duration = audio.duration;
-            audio.currentTime = (clickX / width) * duration;
+            if (!Number.isFinite(duration) || duration <= 0) return;
+
+            const rect = progressContainer.getBoundingClientRect();
+            if (!rect.width) return;
+            const fraction = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
+            audio.currentTime = fraction * duration;
+            updateTimeline();
+        }
+
+        progressContainer.addEventListener('pointerdown', function (event) {
+            if (event.button !== undefined && event.button !== 0) return;
+            progressContainer.setPointerCapture?.(event.pointerId);
+            seekFromPointer(event);
+        });
+        progressContainer.addEventListener('pointermove', function (event) {
+            if (progressContainer.hasPointerCapture?.(event.pointerId)) seekFromPointer(event);
+        });
+        progressContainer.addEventListener('pointerup', function (event) {
+            if (progressContainer.hasPointerCapture?.(event.pointerId)) {
+                seekFromPointer(event);
+                progressContainer.releasePointerCapture(event.pointerId);
+            }
+        });
+        progressContainer.addEventListener('keydown', function (event) {
+            if (!Number.isFinite(audio.duration) || audio.duration <= 0) return;
+            const step = event.shiftKey ? 30 : 5;
+            if (event.key === 'ArrowRight') audio.currentTime = Math.min(audio.duration, audio.currentTime + step);
+            else if (event.key === 'ArrowLeft') audio.currentTime = Math.max(0, audio.currentTime - step);
+            else if (event.key === 'Home') audio.currentTime = 0;
+            else if (event.key === 'End') audio.currentTime = audio.duration;
+            else return;
+            event.preventDefault();
+            updateTimeline();
         });
 
         muteBtn.addEventListener('click', function () {

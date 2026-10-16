@@ -35,11 +35,11 @@
             </a>
             <a href="{% url 'search_audio' %}" class="nav-link-custom">
                 <i class="bi bi-mic-fill"></i>
-                <span>Archives Sonores</span>
+                <span>Archives Audios</span>
             </a>
             <a href="{% url 'search_document' %}" class="nav-link-custom">
                 <i class="bi bi-file-earmark-text-fill"></i>
-                <span>Documents OCR</span>
+                <span>Documents</span>
             </a>
         </nav>
 
@@ -93,7 +93,6 @@
                     </div>
                     <div class="d-none d-md-block text-start lh-sm">
                         <div class="fw-bold small">{{ user.get_full_name|default:user.username|default:"Journaliste" }}</div>
-                        <div class="text-muted" style="font-size: 0.75rem;">Rédaction</div>
                     </div>
                 </div>
             </div>
@@ -108,19 +107,19 @@
                     <h2 class="fw-bold mb-1 fs-4 d-flex align-items-center gap-2">
                         <i class="bi bi-clock-history" style="color: var(--brand-primary);"></i> Historique de consultation
                     </h2>
-                    <p class="text-muted small mb-0">Retrouvez toutes vos activités d'écoute et de lecture d'archives récentes.</p>
+                    {% comment %} <p class="text-muted small mb-0">Retrouvez toutes vos activités d'écoute et de lecture d'archives récentes.</p> {% endcomment %}
                 </div>
             </div>
 
             <!-- Onglets de Sélection (Pills) -->
             <ul class="nav nav-pills nav-pills-custom gap-2 mb-4" id="pills-tab" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active d-flex align-items-center gap-2" id="pills-audios-tab" data-bs-toggle="pill" data-bs-target="#pills-audios" type="button" role="tab">
+                    <button class="nav-link {% if active_history_tab == 'audios' %}active{% endif %} d-flex align-items-center gap-2" id="pills-audios-tab" data-bs-toggle="pill" data-bs-target="#pills-audios" type="button" role="tab">
                         <i class="bi bi-mic-fill"></i> Audios écoutés ({{ total_audio_views }})
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link d-flex align-items-center gap-2" id="pills-documents-tab" data-bs-toggle="pill" data-bs-target="#pills-documents" type="button" role="tab">
+                    <button class="nav-link {% if active_history_tab == 'documents' %}active{% endif %} d-flex align-items-center gap-2" id="pills-documents-tab" data-bs-toggle="pill" data-bs-target="#pills-documents" type="button" role="tab">
                         <i class="bi bi-file-earmark-text-fill"></i> Documents consultés ({{ total_doc_views }})
                     </button>
                 </li>
@@ -130,7 +129,7 @@
             <div class="tab-content" id="pills-tabContent">
 
                 <!-- Historique Audios -->
-                <div class="tab-pane fade show active" id="pills-audios" role="tabpanel">
+                <div class="tab-pane fade {% if active_history_tab == 'audios' %}show active{% endif %}" id="pills-audios" role="tabpanel">
                     <div class="d-flex flex-column gap-3">
                         {% if audio_history %}
                             {% for item in audio_history %}
@@ -160,14 +159,15 @@
                             <div class="dash-card text-center py-5">
                                 <i class="bi bi-clock text-muted fs-1 mb-2"></i>
                                 <h6 class="fw-bold">Aucun historique d'écoute</h6>
-                                <p class="text-muted small mb-0">Vos écoutes d'archives sonores apparaîtront ici.</p>
+                                <p class="text-muted small mb-0">Vos écoutes d'archives audios apparaîtront ici.</p>
                             </div>
                         {% endif %}
                     </div>
+                    {% include 'includes/pagination.html' with pagination=audio_pagination show_clear_history=True %}
                 </div>
 
                 <!-- Historique Documents -->
-                <div class="tab-pane fade" id="pills-documents" role="tabpanel">
+                <div class="tab-pane fade {% if active_history_tab == 'documents' %}show active{% endif %}" id="pills-documents" role="tabpanel">
                     <div class="d-flex flex-column gap-3">
                         {% if doc_history %}
                             {% for item in doc_history %}
@@ -201,6 +201,7 @@
                             </div>
                         {% endif %}
                     </div>
+                    {% include 'includes/pagination.html' with pagination=doc_pagination show_clear_history=True %}
                 </div>
 
             </div>

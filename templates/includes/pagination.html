@@ -1,0 +1,35 @@
+{% if pagination and pagination.total or show_clear_history %}
+<nav class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 my-4" aria-label="Pagination des résultats">
+    {% if show_clear_history %}
+        <form method="post" action="{% url 'clear_history' %}" onsubmit="return confirm('Voulez-vous vraiment effacer tout votre historique de consultation et d’écoute ?');">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-link btn-sm text-danger p-0 text-decoration-none">Effacer l’historique</button>
+        </form>
+    {% else %}
+        {% comment %} <small class="text-muted">Affichage de {{ pagination.first }} à {{ pagination.last }} sur {{ pagination.total }}</small> {% endcomment %}
+    {% endif %}
+    {% if pagination.items|length > 1 %}
+        <ul class="pagination pagination-sm mb-0">
+            {% if pagination.previous_url %}
+                <li class="page-item"><a class="page-link" href="{{ pagination.previous_url }}" aria-label="Page précédente">Précédent</a></li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">Précédent</span></li>
+            {% endif %}
+            {% for item in pagination.items %}
+                {% if item.ellipsis %}
+                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                {% elif item.current %}
+                    <li class="page-item active" aria-current="page"><span class="page-link">{{ item.number }}</span></li>
+                {% else %}
+                    <li class="page-item"><a class="page-link" href="{{ item.url }}">{{ item.number }}</a></li>
+                {% endif %}
+            {% endfor %}
+            {% if pagination.next_url %}
+                <li class="page-item"><a class="page-link" href="{{ pagination.next_url }}" aria-label="Page suivante">Suivant</a></li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">Suivant</span></li>
+            {% endif %}
+        </ul>
+    {% endif %}
+</nav>
+{% endif %}

@@ -151,7 +151,6 @@ body {
     position: sticky;
     top: 0;
     z-index: 990;
-    margin: 0 !important;
     padding: 0 1.75rem;
     display: flex;
     align-items: center; /* Aligne verticalement le groupe gauche et le groupe droit */
@@ -199,6 +198,19 @@ body {
     color: var(--text-muted);
     pointer-events: none;
     z-index: 2;
+}
+
+.avatar-box {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background-color: var(--brand-primary);
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.875rem;
 }
 
         /* ==========================================

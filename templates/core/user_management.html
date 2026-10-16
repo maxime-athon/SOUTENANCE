@@ -174,7 +174,7 @@
                 <h4 class="fw-bold mb-0 d-flex align-items-center gap-2">
                     <i class="bi bi-people-fill text-theme-green"></i> Liste des utilisateurs
                 </h4>
-                <span class="badge badge-archiviste rounded-pill px-3 py-2 fw-semibold">{{ users|length }} compte{% if users|length > 1 %}s{% endif %} enregistré{% if users|length > 1 %}s{% endif %}</span>
+                <span class="badge badge-archiviste rounded-pill px-3 py-2 fw-semibold">{{ total_users }} compte{% if total_users > 1 %}s{% endif %} enregistré{% if total_users > 1 %}s{% endif %}</span>
             </div>
 
             <div class="card-body p-4">
@@ -294,6 +294,7 @@
                         <p class="mb-0">Aucun utilisateur ne correspond à vos critères de recherche.</p>
                     </div>
                 {% endif %}
+                {% include 'includes/pagination.html' %}
             </div>
         </div>
     </div>

@@ -205,6 +205,26 @@ body {
     font-weight: 500;
 }
 
+.doc-meta {
+    min-width: 0;
+}
+
+.doc-meta .badge-cat {
+    flex: 1 1 9rem;
+    min-width: 0;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.35;
+    text-align: left;
+}
+
+.doc-date {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    margin-left: auto;
+}
+
 mark.ocr-highlight {
     background-color: var(--warning-color);
     color: #000000;

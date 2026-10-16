@@ -22,6 +22,7 @@ from django.http import HttpResponse, JsonResponse
 from django.core.paginator import Paginator
 from django.template.loader import render_to_string
 from django.utils.dateparse import parse_date
+from .pagination import build_pagination
 
 # Dépendances optionnelles pour PDF / DOCX (installer reportlab et python-docx)
 try:
@@ -256,19 +257,28 @@ def favoris_view(request):
     user = request.user
 
     # Récupération des favoris Audio (modèle Favorite de l'app audio_archive)
-    favorite_audios = user.audio_favorites.select_related('audio_file').all()
+    audio_favorites = user.audio_favorites.select_related('audio_file').order_by('-added_at')
 
     # Récupération des favoris Documents
-    favorite_documents = DocumentFavorite.objects.filter(user=user).select_related('document')
+    document_favorites = DocumentFavorite.objects.filter(user=user).select_related('document').order_by('-added_at')
+
+    audio_page_obj = Paginator(audio_favorites, 10).get_page(request.GET.get('audio_page'))
+    document_page_obj = Paginator(document_favorites, 10).get_page(request.GET.get('document_page'))
+    active_tab = 'documents' if request.GET.get('tab') == 'documents' else 'audios'
 
     # Compteurs
-    my_audio_favorites_count = favorite_audios.count()
-    my_document_favorites_count = favorite_documents.count()
+    my_audio_favorites_count = audio_page_obj.paginator.count
+    my_document_favorites_count = document_page_obj.paginator.count
     favorite_total = my_audio_favorites_count + my_document_favorites_count
 
     context = {
-        'favorite_audios': favorite_audios,
-        'favorite_documents': favorite_documents,
+        'favorite_audios': audio_page_obj.object_list,
+        'favorite_documents': document_page_obj.object_list,
+        'audio_page_obj': audio_page_obj,
+        'document_page_obj': document_page_obj,
+        'audio_pagination': build_pagination(request, audio_page_obj, 'audio_page', 'audios'),
+        'document_pagination': build_pagination(request, document_page_obj, 'document_page', 'documents'),
+        'active_favorites_tab': active_tab,
         'my_audio_favorites_count': my_audio_favorites_count,
         'my_document_favorites_count': my_document_favorites_count,
         'favorite_total': favorite_total,
@@ -298,20 +308,37 @@ def historique_view(request):
     doc_history = doc_history.order_by('-viewed_at')
     audio_history = audio_history.order_by('-listened_at')
 
-    # Compteurs
-    total_doc_views = doc_history.count()
-    total_audio_views = audio_history.count()
+    doc_page_obj = Paginator(doc_history, 10).get_page(request.GET.get('doc_page'))
+    audio_page_obj = Paginator(audio_history, 10).get_page(request.GET.get('audio_page'))
+    total_doc_views = doc_page_obj.paginator.count
+    total_audio_views = audio_page_obj.paginator.count
     total_history = total_doc_views + total_audio_views
+    active_tab = 'documents' if request.GET.get('tab') == 'documents' else 'audios'
 
     context = {
-        'doc_history': doc_history,
-        'audio_history': audio_history,
+        'doc_history': doc_page_obj.object_list,
+        'audio_history': audio_page_obj.object_list,
+        'doc_page_obj': doc_page_obj,
+        'audio_page_obj': audio_page_obj,
+        'audio_pagination': build_pagination(request, audio_page_obj, 'audio_page', 'audios'),
+        'doc_pagination': build_pagination(request, doc_page_obj, 'doc_page', 'documents'),
+        'active_history_tab': active_tab,
         'total_doc_views': total_doc_views,
         'total_audio_views': total_audio_views,
         'total_history': total_history,
         'current_query': query,
     }
     return render(request, 'core/historique.html', context)
+
+
+@login_required
+@require_POST
+def clear_history(request):
+    """Clear only the connected user's audio and document history."""
+    DocumentView.objects.filter(user=request.user).delete()
+    AudioView.objects.filter(user=request.user).delete()
+    messages.success(request, "Votre historique de consultation et d'écoute a été effacé.")
+    return redirect('historique')
 
 # -------------------------------------------------------------------
 #  Gestion centralisée des Catégories (Document & Audio)
@@ -441,8 +468,13 @@ def manage_users(request):
     else:
         form = UserForm()
 
+    page_obj = Paginator(users_query, 20).get_page(request.GET.get('page'))
+
     return render(request, 'core/user_management.html', {
-        'users': users_query,
+        'users': page_obj.object_list,
+        'page_obj': page_obj,
+        'pagination': build_pagination(request, page_obj),
+        'total_users': page_obj.paginator.count,
         'form': form,
         'current_query': query,
         'current_role': role,

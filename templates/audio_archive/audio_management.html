@@ -138,7 +138,7 @@
     
     <!-- Bouton Tous -->
     <button type="button" class="badge border-0 rounded-pill px-3 py-2 category-filter-btn active-filter" data-category-id="all">
-        Toutes ({{ audio_files|length }})
+        Toutes ({{ total_audio_files }})
     </button>
 
     <!-- Boutons dynamiques -->
@@ -289,6 +289,8 @@
 </div>
 
 <!-- TOUTES LES MODALES DE SUPPRESSION (Placées hors des vues pour prévenir tout conflit DOM) -->
+{% include 'includes/pagination.html' %}
+
 {% for audio in audio_files %}
     <!-- Modal pour Vue Grille -->
     <div class="modal fade text-start" id="deleteModalGrid{{ audio.id }}" tabindex="-1" aria-hidden="true">

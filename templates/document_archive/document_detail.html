@@ -6,6 +6,9 @@
 <!-- Entête avec fil d'Ariane et boutons d'action -->
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
     <div>
+        {% comment %} <a href="{% url 'search_document' %}" class="btn btn-sm btn-outline-secondary rounded-3 mb-2 d-inline-flex align-items-center gap-1">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a> {% endcomment %}
         <div class="d-flex align-items-center gap-2">
             <h1 class="fw-bold mb-0 fs-2">{{ document.title }}</h1>
             {% comment %} {% if document.compressed %}
@@ -16,10 +19,10 @@
 
     <!-- Actions principales -->
     <div class="d-flex flex-wrap align-items-center gap-2">
-        <a href="{% url 'document_list' %}" class="btn btn-outline-secondary rounded-3 d-inline-flex align-items-center gap-2">
+        {% comment %} <a href="{% url 'document_list' %}" class="btn btn-outline-secondary rounded-3 d-inline-flex align-items-center gap-2">
             <i class="bi bi-arrow-left"></i>
             <span>Retour</span>
-        </a>
+        </a> {% endcomment %}
 
         {% if can_edit %}
 

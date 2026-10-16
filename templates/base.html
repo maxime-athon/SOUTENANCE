@@ -181,7 +181,7 @@
                 <i class="bi bi-disc-fill text-warning"></i>
                 <span>Archive Audio</span>
             </a>
-            <a href="{% url 'document_list' %}" class="topbar-nav-btn {% if 'document' in request.resolver_match.url_name %}active{% endif %}" title="Gestion & Extraction OCR">
+            <a href="{% if user.is_staff or user.is_superuser %}{% url 'document_list' %}{% else %}{% url 'search_document' %}{% endif %}" class="topbar-nav-btn {% if 'document' in request.resolver_match.url_name or request.resolver_match.url_name == 'search_document' %}active{% endif %}" title="{% if user.is_staff or user.is_superuser %}Gestion des archives documentaires{% else %}Rechercher des documents{% endif %}">
                 <i class="bi bi-file-earmark-check-fill text-warning"></i>
                 <span>Archive Documents</span>
             </a>
@@ -225,7 +225,7 @@
             </a>
 
             <div class="sidebar-header-cat">Patrimoine</div>
-            <a href="{% url 'document_list' %}" class="sidebar-nav-link {% if 'document' in request.resolver_match.url_name %}active{% endif %}">
+            <a href="{% if user.is_staff or user.is_superuser %}{% url 'document_list' %}{% else %}{% url 'search_document' %}{% endif %}" class="sidebar-nav-link {% if 'document' in request.resolver_match.url_name or request.resolver_match.url_name == 'search_document' %}active{% endif %}">
                 <i class="bi bi-file-earmark-text-fill"></i>
                 <span>Documents</span>
             </a>

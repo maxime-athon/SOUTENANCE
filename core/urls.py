@@ -19,4 +19,5 @@ urlpatterns = [
     #vues pour les favoris
     path('favoris/', views.favoris_view, name='favoris'),
     path('historique/', views.historique_view, name='historique'),
+    path('historique/effacer/', views.clear_history, name='clear_history'),
 ]
